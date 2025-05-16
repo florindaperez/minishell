@@ -1,0 +1,17 @@
+# Ignorar archivos de objetos
+*.o
+
+# Ignorar archivos de dependencias
+*.d
+
+# Ignorar directorios de compilación (como el de la carpeta obj)
+/obj/
+
+#Ignorar los archivos tmp .swp 
+*.swp
+
+#Ignorar ejecutables y .a
+
+*.a
+*.out
+*.txt
