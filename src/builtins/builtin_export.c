@@ -3,112 +3,107 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jocuni-p <jocuni-p@student.42.fr>          +#+  +:+       +#+        */
+/*   By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/27 16:45:46 by castorga          #+#    #+#             */
-/*   Updated: 2024/05/30 12:29:33 by jocuni-p         ###   ########.fr       */
+/*   Created: 2025/02/28 10:03:35 by flperez-          #+#    #+#             */
+/*   Updated: 2025/02/28 13:37:40 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-/*print the export output(without argument)*/
-static int	just_export(t_env *env)
+/*
+* Divide "KEY=VALUE" en un array de dos strings: {KEY, VALUE}.
+* Retorna NULL en caso de error de alocación o si no hay '='.
+*/
+static char	**get_key_value_pair(char *arg)
 {
-	while (env != NULL)
+	char	**pair;
+	char	*equal_sign_pos;
+	size_t	key_len;
+
+	equal_sign_pos = ft_strchr(arg, '=');
+	if (!equal_sign_pos)
+		return (NULL);
+	pair = (char **)malloc(sizeof(char *) * 3);
+	if (!pair)
+		return (NULL);
+	key_len = equal_sign_pos - arg;
+	pair[0] = ft_substr(arg, 0, key_len);
+	pair[1] = ft_substr(arg, key_len + 1, ft_strlen(equal_sign_pos + 1));
+	pair[2] = NULL;
+	if (!pair[0] || !pair[1])
 	{
-		printf("declare -x %s=\"%s\"\n", env->key, env->val);
-		env = env->next;
+		free_str_tab(pair);
+		return (NULL);
 	}
-	return (0);
+	return (pair);
 }
 
-/*check if a variable exists. If not, create it*/
-int	create_variable(char *cmd, t_env **env)
+/*
+* Maneja un argumento de export que contiene "=".
+*/
+static int	handle_export_with_equals(char *arg, t_data_env *data)
 {
-	char	**tokens;
-	t_env	*new_var;
+	char	**key_val_pair;
 
-	tokens = ft_split(cmd, '=');
-	if (tokens && tokens[0] && tokens[1])
+	key_val_pair = get_key_value_pair(arg);
+	if (!key_val_pair || !is_valid_env_var_key(key_val_pair[0]))
 	{
-		if (!variable_exists(env, tokens))
-		{
-			new_var = lstnew(tokens[0], tokens[1]);
-			lstadd_back(env, new_var);
-		}
-		free_arr2d(tokens);
+		msg_error_cmd("export", arg, "not a valid identifier", 1);
+		free_str_tab(key_val_pair);
+		return (EXIT_FAILURE);
 	}
-	else if (tokens && tokens[0])
+	if (!add_env_var(data, key_val_pair[0], key_val_pair[1]))
 	{
-		if (!variable_exists_op3(*env, tokens[0]))
-		{
-			new_var = lstnew(tokens[0], " ");
-			lstadd_back(env, new_var);
-		}
-		free_arr2d(tokens);
+		free_str_tab(key_val_pair);
+		return (EXIT_FAILURE);
 	}
-	return (0);
+	free_str_tab(key_val_pair);
+	return (EXIT_SUCCESS);
 }
 
-/*check if a variable exists. If not, create it. If yes, concatenates it*/
-int	overwrite_variable(t_env *env, char *cmd)
+/*
+* Procesa un único argumento para el comando export.
+* Valida el argumento y lo anade al entorno si es válido.
+*/
+static int	process_export_argument(char *arg, t_data_env *data)
 {
-	char	**tokens;
-	char	**tokens2;
-	t_env	*new_var;
-
-	tokens = ft_split(cmd, '+');
-	if (tokens && tokens[0])
+	if (ft_strchr(arg, '=') == NULL)
 	{
-		tokens2 = ft_split(tokens[1], '=');
-		if (tokens2 && tokens2[0])
+		if (!is_valid_env_var_key(arg))
 		{
-			if (!variable_exists_op2(env, cmd))
-			{
-				new_var = lstnew(tokens[0], tokens2[0]);
-				lstadd_back(&env, new_var);
-			}
-			free_arr2d(tokens2);
+			msg_error_cmd("export", arg, "not a valid identifier", 1);
+			return (EXIT_FAILURE);
 		}
-		free_arr2d(tokens);
+		if (!add_env_var(data, arg, NULL))
+			return (EXIT_FAILURE);
 	}
-	return (0);
+	else
+	{
+		return (handle_export_with_equals(arg, data));
+	}
+	return (EXIT_SUCCESS);
 }
 
-/*Function that adds a new environment variable if applicable.*/
-int	builtin_export_core(t_cmd *cmd, t_env **env)
+/*
+* builtin_export: Agrega variables al entorno.
+* Si no hay argumentos, se comporta como 'env' (imprime variables).
+*/
+int	builtin_export(char **args, t_data_env *data)
 {
 	int	i;
-	int	chk_exp;
+	int	overall_ret_status;
 
+	overall_ret_status = EXIT_SUCCESS;
 	i = 1;
-	while (cmd->commands[i] != NULL)
+	if (!args[i])
+		return (builtin_env(data, args));
+	while (args && args[i])
 	{
-		if (check_syntax(cmd->commands[i]))
-		{
-			ft_msgs(5, cmd);
-			return (1);
-		}
-		chk_exp = check_export(cmd->commands[i]);
-		if ((chk_exp == 1) || (chk_exp == 3))
-			create_variable(cmd->commands[i], env);
-		else if (chk_exp == 2)
-			overwrite_variable(*env, cmd->commands[i]);
-		else
-			return (1);
+		if (process_export_argument(args[i], data) == EXIT_FAILURE)
+			overall_ret_status = EXIT_FAILURE;
 		i++;
 	}
-	return (0);
-}
-
-/*builtin export*/
-int	builtin_export(t_cmd *cmd, t_env **env)
-{
-	if (size_arr2d(cmd->commands) == 1)
-		just_export(*env);
-	else
-		builtin_export_core(cmd, env);
-	set_exit_status(0);
-	return (0);
+	return (overall_ret_status);
 }

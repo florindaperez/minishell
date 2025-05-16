@@ -3,56 +3,85 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_echo.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: castorga <castorga@student.42barcel>       +#+  +:+       +#+        */
+/*   By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/27 15:52:45 by castorga          #+#    #+#             */
-/*   Updated: 2024/05/27 15:52:47 by castorga         ###   ########.fr       */
+/*   Created: 2025/02/26 11:26:46 by flperez-          #+#    #+#             */
+/*   Updated: 2025/02/26 13:07:42 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-/* echo ~ option */
-static int	echo_options(t_cmd *cmd, int i, int *print_newline)
+/*
+* is_n_flag:
+* Comprobamos si el el argumento es una opcion valida => true ("-n", "-nn",
+* "-nnnnnnnnnn", etc....).
+* arg[0] = '-' y el resto de argumentos = 'n'. Cuando encontramos
+* algun char != 'n' devuelve false ("-nna", "--n", "-n42").
+*/
+static bool	value_n_flag(char *arg)
 {
-	if (ft_strcmp(cmd->commands[1], "~") == 0)
-	{
-		printf("%s\n", getenv("HOME"));
-		*print_newline = 0;
-		return (0);
-	}
-	while (cmd->commands[i])
-	{
-		printf("%s", cmd->commands[i]);
-		if (cmd->commands[i + 1] && cmd->commands[i][0] != '\0')
-			printf(" ");
+	int		i;
+	bool	n_flag;
+
+	n_flag = false;
+	i = 0;
+	if (!arg || arg[i] != '-')
+		return (n_flag);
+	i++;
+	while (arg[i] && arg[i] == 'n')
 		i++;
-	}
-	return (0);
+	if (arg[i] == '\0')
+		n_flag = true;
+	return (n_flag);
 }
 
-/* builtin echo */
-int	builtin_echo(t_cmd *cmd)
+/*
+* print_args_echo:
+* Imprimimos los argumentos en la terminal STDOUT.
+* Cuando no hemos llegado al final y n_flag es false, anade un salto de linea.
+* Ejemplo: "echo flowers power"   => flowers power\n
+* "echo -n flowers power" => flowers power
+* "echo"                  => \n
+* "echo -n"               => (no imprime nada)
+*/
+static void	print_args_echo(char **args, bool n_flag, int i)
 {
-	int	i;
-	int	print_newline;
-
-	i = 1;
-	print_newline = 1;
-	if (size_arr2d(cmd->commands) == 1)
+	if (!args[i])
 	{
-		printf("\n");
-		set_exit_status(0);
-		return (0);
+		if (!n_flag)
+			ft_putchar_fd('\n', STDOUT_FILENO);
+		return ;
 	}
-	if (ft_strcmp(cmd->commands[1], "-n") == 0)
+	while (args[i])
 	{
-		print_newline = 0;
+		if (args[i])
+			ft_putstr_fd(args[i], STDOUT_FILENO);
+		if (args[i + 1])
+			ft_putchar_fd(' ', STDOUT_FILENO);
+		else if (!n_flag)
+			ft_putchar_fd('\n', STDOUT_FILENO);
 		i++;
 	}
-	echo_options(cmd, i, &print_newline);
-	if (print_newline)
-		printf("\n");
-	set_exit_status(0);
-	return (0);
+}
+
+/*
+* builtin_echo:
+* Replica el comportamiento del comando "echo".
+* n_flag indica si se debe omitir el salto de línea final.
+*/
+int	builtin_echo(char **args)
+{
+	int		i;
+	bool	n_flag;
+
+	n_flag = false;
+	i = 1;
+	while (args[i] && value_n_flag(args[i]))
+	{
+		n_flag = true;
+		i++;
+	}
+	print_args_echo(args, n_flag, i);
+	return (EXIT_SUCCESS);
 }

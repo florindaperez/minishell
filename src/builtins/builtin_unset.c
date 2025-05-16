@@ -3,65 +3,87 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_unset.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: castorga <castorga@student.42barcel>       +#+  +:+       +#+        */
+/*   By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/27 17:05:34 by castorga          #+#    #+#             */
-/*   Updated: 2024/05/27 17:05:39 by castorga         ###   ########.fr       */
+/*   Created: 2025/02/25 19:39:13 by flperez-          #+#    #+#             */
+/*   Updated: 2025/02/28 11:16:08 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-/* removes environment variables specified in the command, checking their 
-syntax and existence, and sets a status flag based on the result.*/
-static int	builtin_unset_core(t_cmd *cmd, t_env **env, int *flag)
+/*
+* Elimina una variable del array de entorno a partir de su 'index_to_remove'.
+* Desplaza los elementos subsiguientes para llenar el vacío.
+* El array original data->env es modificado directamente.
+*/
+static bool	remove_env_var(t_data_env *data, int index_to_remove)
 {
-	int	chk_exp;
 	int	i;
+	int	current_env_size;
 
-	i = 1;
-	while (cmd->commands[i] != NULL)
+	if (!data || !data->env)
+		return (false);
+	current_env_size = num_var_env(data->env);
+	if (index_to_remove < 0 || index_to_remove >= current_env_size)
+		return (false);
+	free_ptr(data->env[index_to_remove]);
+	data->env[index_to_remove] = NULL;
+	i = index_to_remove;
+	while (i < current_env_size - 1)
 	{
-		if (check_syntax(cmd->commands[i]))
-			return (1);
-		chk_exp = check_export(cmd->commands[i]);
-		if (chk_exp == 1 || chk_exp == 2)
-			return (0);
-		else
-		{
-			if (!(variable_exists_op3(*env, cmd->commands[i])))
-				*flag = 1;
-			else
-			{
-				env_delone(env, &cmd->commands[i], &free);
-				*flag = 2;
-			}
-		}
+		data->env[i] = data->env[i + 1];
 		i++;
 	}
-	return (0);
+	data->env[current_env_size - 1] = NULL;
+	return (true);
 }
 
-/*builtin unset*/
-int	builtin_unset(t_cmd *cmd, t_env **env)
+/*
+* Procesa un único argumento para el comando unset.
+* Valida el argumento y lo elimina del entorno si es válido y existe.
+* Devuelve EXIT_SUCCESS o EXIT_FAILURE.
+*/
+static int	process_unset_argument(char *arg, t_data_env *data)
 {
-	int	flag;
+	int	var_id;
 
-	flag = 0;
-	if (size_arr2d(cmd->commands) == 1)
+	if (!is_valid_env_var_key(arg) || ft_strchr(arg, '='))
 	{
-		set_exit_status(0);
-		return (0);
+		msg_error_cmd("unset", arg, "not a valid identifier", 1);
+		return (EXIT_FAILURE);
 	}
 	else
 	{
-		if (builtin_unset_core(cmd, env, &flag))
+		var_id = get_env_var_id(data->env, arg);
+		if (var_id != -1)
 		{
-			ft_msgs(5, cmd);
-			return (1);
+			if (!remove_env_var(data, var_id))
+			{
+				return (EXIT_FAILURE);
+			}
 		}
-		builtin_unset_core(cmd, env, &flag);
 	}
-	set_exit_status(0);
-	return (0);
+	return (EXIT_SUCCESS);
+}
+
+/*
+* builtin_unset: Elimina variables de entorno.
+* Itera sobre los argumentos y procesa cada uno.
+* Retorna EXIT_FAILURE si algún argumento es inválido, de lo contrario SUCCESS.
+*/
+int	builtin_unset(char **args, t_data_env *data)
+{
+	int	i;
+	int	overall_ret_status;
+
+	overall_ret_status = EXIT_SUCCESS;
+	i = 1;
+	while (args && args[i])
+	{
+		if (process_unset_argument(args[i], data) == EXIT_FAILURE)
+			overall_ret_status = EXIT_FAILURE;
+		i++;
+	}
+	return (overall_ret_status);
 }

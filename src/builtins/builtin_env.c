@@ -3,70 +3,33 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_env.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jocuni-p <jocuni-p@student.42.fr>          +#+  +:+       +#+        */
+/*   By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/27 16:15:26 by castorga          #+#    #+#             */
-/*   Updated: 2024/05/30 12:29:48 by jocuni-p         ###   ########.fr       */
+/*   Created: 2025/03/13 11:38:38 by flperez-          #+#    #+#             */
+/*   Updated: 2025/03/13 11:39:11 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-/*check if the PATH variable exists*/
-int	no_path_env(t_cmd *cmd, t_exe exe, t_env *env)
+/* 
+ * builtin_env:Replicamos el comando env . Imprimir las variables de entorno
+ * almacenadas en data->env.
+ * 
+*/
+int	builtin_env(t_data_env *data, char **args)
 {
-	int		flag;
+	int	i;
 
-	(void)exe;
-	flag = 0;
-	while (env)
+	i = 0;
+	if (args && args[1])
 	{
-		if (variable_exists_op3(env, "PATH"))
-			flag = 1;
-		env = env->next;
+		msg_error_cmd("env", NULL, "too many arguments", 2);
+		return (2);
 	}
-	if (flag == 0)
-	{
-		ft_msgs(4, cmd);
-		return (1);
-	}
-	return (0);
-}
-
-void	print_env(t_env *env)
-{
-	while (env)
-	{
-		if (!(ft_strchr(env->val, 32)) || (ft_strcmp(env->key, "PATH") == 0))
-			printf("%s=%s\n", env->key, env->val);
-		env = env->next;
-	}
-}
-
-/*builtin that handle the environment*/
-int	builtin_env(t_cmd *cmd, t_exe exe, t_env *env)
-{
-	if (size_arr2d(cmd->commands) > 1)
-	{
-		if ((ft_strcmp(cmd->commands[1], "test") == 0) || \
-		(ft_strcmp(cmd->commands[1], "true") == 0) || \
-		(ft_strcmp(cmd->commands[1], "false") == 0))
-			return (1);
-		else if (ft_strcmp(cmd->commands[1], "echo") == 0)
-		{
-			printf("\n");
-			return (0);
-		}
-		else
-			ft_msgs(4, cmd);
-		return (1);
-	}
-	else
-	{
-		if (no_path_env(cmd, exe, env))
-			return (1);
-		print_env(env);
-	}
-	set_exit_status(0);
-	return (0);
+	if (!data->env)
+		return (EXIT_FAILURE);
+	while (data->env[i])
+		ft_putendl_fd(data->env[i++], STDOUT_FILENO);
+	return (EXIT_SUCCESS);
 }

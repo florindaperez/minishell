@@ -3,113 +3,72 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_cd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: castorga <castorga@student.42barcel>       +#+  +:+       +#+        */
+/*   By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/27 15:51:57 by castorga          #+#    #+#             */
-/*   Updated: 2024/05/27 15:52:00 by castorga         ###   ########.fr       */
+/*   Created: 2025/02/28 09:41:30 by flperez-          #+#    #+#             */
+/*   Updated: 2025/03/15 14:07:52 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-/*Change to the user's home directory*/
-int	go_home(void)
+static int	cd_to_home(t_data_env *data)
 {
-	char	*home_dir;
+	char	*path_home;
 
-	home_dir = getenv("HOME");
-	if (home_dir == NULL)
+	path_home = get_env_var_val(data->env, "HOME");
+	if (!path_home || *path_home == '\0' || ft_isspace(*path_home))
 	{
-		perror("getenv() error");
-		return (1);
+		msg_error_cmd("cd", NULL, "HOME not set", EXIT_FAILURE);
+		return (EXIT_FAILURE);
 	}
-	if (chdir(home_dir) != 0)
-	{
-		perror("chdir() error");
-		return (1);
-	}
-	set_exit_status(0);
-	return (0);
+	return (!perform_directory_change(data, path_home));
 }
 
-/*Get information about a file*/
-int	get_info_file(t_cmd *cmd, struct stat *info_f)
+static int	cd_to_oldpwd(t_data_env *data)
 {
-	if (stat(cmd->commands[1], info_f) == -1)
+	char	*path_oldpwd;
+
+	path_oldpwd = get_env_var_val(data->env, "OLDPWD");
+	if (!path_oldpwd)
 	{
-		ft_msgs(4, cmd);
-		return (1);
+		msg_error_cmd("cd", NULL, "OLDPWD not set", EXIT_FAILURE);
+		return (EXIT_FAILURE);
 	}
-	if (!S_ISDIR(info_f->st_mode) || \
-		!(info_f->st_mode & S_IRUSR) || !(info_f->st_mode & S_IXUSR))
-	{
-		ft_msgs(7, cmd);
-		return (1);
-	}
-	return (0);
+	ft_putendl_fd(path_oldpwd, STDOUT_FILENO);
+	return (!perform_directory_change(data, path_oldpwd));
 }
 
-/* Change to a specific directory */
-int	go_path(t_cmd *cmd)
+static int	cd_handle_path_arg(char *path_arg, t_data_env *data)
 {
-	struct stat	info_f;
-
-	if (!exist_cwd())
-		return (1);
-	else
-	{
-		if (cmd->commands[1] == NULL)
-			return (1);
-		get_info_file(cmd, &info_f);
-		if (chdir(cmd->commands[1]) == -1)
-		{
-			return (1);
-		}
-	}
-	return (0);
+	if (ft_strcmp(path_arg, ".") == 0)
+		return (EXIT_SUCCESS);
+	return (!perform_directory_change(data, path_arg));
 }
 
-/*Change to a specific directory*/
-static int	change_directory(t_cmd *cmd, char **current_wd)
+/*
+* builtin_cd:
+* Implementa el comando `cd`.
+* - Sin argumentos o con "--": Cambia al directorio HOME.
+* - Con "-": Cambia al directorio OLDPWD y muestra la nueva ruta.
+* - Con un argumento de ruta: Intenta cambiar a esa ruta.
+* - Maneja errores como "too many arguments", HOME/OLDPWD no definidos.
+*/
+int	builtin_cd(char **args, t_data_env *data)
 {
-	*current_wd = getcwd(NULL, 0);
-	if (*current_wd == NULL)
+	if (!args[1] || ft_isspace(args[1][0])
+		|| args[1][0] == '\0' || ft_strncmp(args[1], "--", 3) == 0)
 	{
-		perror("getcwd() error");
-		return (1);
+		return (cd_to_home(data));
 	}
-	if (go_path(cmd) != 0)
+	if (args[2])
 	{
-		free(*current_wd);
-		*current_wd = NULL;
-		return (1);
+		msg_error_cmd("cd", NULL, "too many arguments", EXIT_FAILURE);
+		return (EXIT_FAILURE);
 	}
-	return (0);
-}
-
-/*Change to a directory accordingly the parameter if applicable..*/
-int	builtin_cd(t_cmd *cmd, t_env **env)
-{
-	char	*current_wd;
-
-	current_wd = NULL;
-	if ((size_arr2d(cmd->commands)) > 2)
+	if (ft_strcmp(args[1], "-") == 0)
 	{
-		ft_msgs(9, cmd);
-		return (1);
+		return (cd_to_oldpwd(data));
 	}
-	if (handle_no_argument(cmd) == 1)
-		return (1);
-	if (handle_tilde(cmd) == 1)
-		return (1);
-	if (handle_dash(cmd) == 1)
-		return (1);
-	if (handle_dot(cmd) == 1)
-		return (0);
-	if (handle_invalid_path(cmd) == 1)
-		return (1);
-	if (change_directory(cmd, &current_wd) != 0)
-		return (1);
-	update_environment(*env, current_wd);
-	return (free_current_wd(current_wd));
+	return (cd_handle_path_arg(args[1], data));
 }

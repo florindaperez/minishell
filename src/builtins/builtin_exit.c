@@ -3,80 +3,100 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_exit.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: castorga <castorga@student.42barcel>       +#+  +:+       +#+        */
+/*   By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/27 16:22:00 by castorga          #+#    #+#             */
-/*   Updated: 2024/05/27 16:22:03 by castorga         ###   ########.fr       */
+/*   Created: 2025/03/13 13:04:13 by flperez-          #+#    #+#             */
+/*   Updated: 2025/03/13 13:09:30 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-/*checks if a str is a space or not.*/
-static int	is_space(const char *str)
+/*
+* Determina si el shell debe terminar.
+*/
+static bool	should_terminate_shell(t_data_env *data)
 {
-	int	i;
-
-	i = 0;
-	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
-		i++;
-	return (i);
+	return (!data->cmd || (!data->cmd->next && !data->cmd->prev));
 }
 
-/*checks if a str is a valid integer or not.*/
-int	check_int(const char *str)
+/*
+* Procesa un único argumento para 'exit', determinando si es numérico
+* y calculando el código de salida.
+*/
+static void	process_single_exit_arg(char *arg_str, int *exit_code_val,
+										bool *is_err)
 {
-	int			i;
-	int			sign;
-	long long	res;
+	long long	parsed_ll;
 
-	res = 0;
-	sign = 1;
-	i = is_space(str);
-	if (str[i] == '-')
-		sign = -1;
-	if (str[i] == '-' || str[i] == '+')
-		i++;
-	if (str[i] < '0' || str[i] > '9')
-		return (-1);
-	while (str[i] >= '0' && str[i] <= '9')
+	*is_err = false;
+	parsed_ll = ft_atoll_with_error_check(arg_str, is_err);
+	if (*is_err)
 	{
-		if ((res * sign > (LLONG_MAX - (str[i] - '0')) / 10) || \
-		(res * sign < (LLONG_MIN + (str[i] - '0')) / 10))
-			return (-1);
-		res *= 10;
-		res += (str[i] - '0');
-		i++;
+		msg_error_cmd("exit", arg_str, "numeric argument required", 2);
+		*exit_code_val = 2;
 	}
-	if (str[i] != '\0' && is_space(str + i) == 0)
-		return (-1);
-	return (0);
+	else
+	{
+		*exit_code_val = (int)(parsed_ll & 0xFF);
+	}
 }
 
-/*builtin exit*/
-int	builtin_exit(t_cmd *cmd)
+/*
+* Maneja la lógica de salida cuando se proporcionan argumentos a 'exit'.
+* Devuelve el código de estado final y determina si se debe abortar
+* una terminación del shell (ej., en caso de "too many arguments").
+*/
+static int	handle_exit_args(char **args, int arg_count,
+								bool *allow_termination)
 {
-	if (cmd->commands[1] && check_int(cmd->commands[1]) != 0)
+	int		exit_code;
+	bool	numeric_error;
+
+	process_single_exit_arg(args[1], &exit_code, &numeric_error);
+	if (numeric_error)
 	{
-		printf("minishell: exit: numeric argument required\n");
-		exit(255);
+		*allow_termination = true;
+		return (exit_code);
 	}
-	else if ((size_arr2d(cmd->commands)) == 1)
+	if (arg_count > 2)
 	{
-		printf("exit\n");
-		exit(0);
+		msg_error_cmd("exit", NULL, "too many arguments", 1);
+		*allow_termination = false;
+		return (EXIT_FAILURE);
 	}
-	else if (cmd->commands[1])
+	*allow_termination = true;
+	return (exit_code);
+}
+
+/*
+* Implementación del builtin exit.
+*/
+int	builtin_exit(char **args, t_data_env *data)
+{
+	int		final_exit_code;
+	int		arg_count;
+	bool	terminate_shell_now;
+	bool	can_terminate_based_on_args;
+
+	arg_count = 0;
+	while (args && args[arg_count])
+		arg_count++;
+	terminate_shell_now = should_terminate_shell(data);
+	can_terminate_based_on_args = true;
+	if (isatty(STDIN_FILENO) && terminate_shell_now)
+		ft_putendl_fd("exit", STDERR_FILENO);
+	if (arg_count == 1)
+		final_exit_code = g_exit_status;
+	else
 	{
-		if ((size_arr2d(cmd->commands)) > 2)
-		{
-			printf("minishell: exit: too many arguments\n");
-			return (1);
-		}
-		printf("exit\n");
-		exit(ft_atoi(cmd->commands[1]));
+		final_exit_code = handle_exit_args(args, arg_count,
+				&can_terminate_based_on_args);
 	}
-	printf("exit\n");
-	exit(0);
-	return (0);
+	if (terminate_shell_now && can_terminate_based_on_args)
+	{
+		free_data_env(data);
+		exit(final_exit_code);
+	}
+	return (final_exit_code);
 }
