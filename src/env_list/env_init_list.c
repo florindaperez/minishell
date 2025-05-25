@@ -13,7 +13,7 @@
 #include "minishell.h"
 
 /* Copies the entire 'char **envp' into a new malloced 't_env' list*/
-void	env_init_list(char **envp, t_env **envlist)
+void	env_init_list(char **envp, t_env **env)
 {
 	int		i;
 	char	**tokens;
@@ -28,7 +28,7 @@ void	env_init_list(char **envp, t_env **envlist)
 		{
 			key = tokens[0];
 			value = tokens[1];
-			lstadd_back(envlist, lstnew(key, value));
+			lstadd_back(env, lstnew(key, value));
 		}
 		free_arr2d(tokens);
 		i++;

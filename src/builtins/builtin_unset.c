@@ -57,7 +57,7 @@ static bool is_valid_key_for_unset(const char *key)
 * Valida el argumento y lo elimina del entorno si es válido.
 * Retorna EXIT_SUCCESS o EXIT_FAILURE.
 */
-static int process_unset_argument(const char *arg, t_cmd *cmd_struct, t_env **env_list_ptr)
+static int process_unset_argument(const char *arg, t_cmd *cmd_struct, t_env **env_ptr)
 {
     (void)cmd_struct; // Marcar como no utilizado si ft_msgs no se usa para este error específico
 
@@ -80,7 +80,7 @@ static int process_unset_argument(const char *arg, t_cmd *cmd_struct, t_env **en
     // env_delone espera char ** como segundo argumento, que apunta a la clave a eliminar.
     // El contenido de 'arg' es la clave.
     char *key_to_delete = (char *)arg; 
-    env_delone(env_list_ptr, &key_to_delete, free); // free se usa para el contenido del nodo (key/val)
+    env_delone(env_ptr, &key_to_delete, free); // free se usa para el contenido del nodo (key/val)
 
     return (EXIT_SUCCESS); // Éxito, incluso si la variable no existía (comportamiento estándar)
 }
@@ -90,7 +90,7 @@ static int process_unset_argument(const char *arg, t_cmd *cmd_struct, t_env **en
 * Elimina variables del entorno.
 * Adaptado de la lógica de flperez para las estructuras de jocuni.
 */
-int builtin_unset(t_cmd *cmd, t_env **env_list_ptr) // Firma de jocuni
+int builtin_unset(t_cmd *cmd, t_env **env_ptr) // Firma de jocuni
 {
     int i;
     int individual_arg_status;
@@ -109,7 +109,7 @@ int builtin_unset(t_cmd *cmd, t_env **env_list_ptr) // Firma de jocuni
     // Procesar cada argumento
     while (cmd->commands[i] != NULL)
     {
-        individual_arg_status = process_unset_argument(cmd->commands[i], cmd, env_list_ptr);
+        individual_arg_status = process_unset_argument(cmd->commands[i], cmd, env_ptr);
         if (individual_arg_status == EXIT_FAILURE)
         {
             overall_shell_exit_status = 1; // Si cualquier argumento es inválido, $? será 1

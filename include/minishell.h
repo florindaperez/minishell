@@ -187,7 +187,7 @@ void	print_arr2d(char **arr2d);//ELIMINAR ANTES DE ENTREGA
 t_env	*lstlast(t_env *lst);
 void	lstadd_back(t_env **lst, t_env *new);
 t_env	*lstnew(char *key, char *value);
-void	env_init_list(char **envp, t_env **envlist);
+void	env_init_list(char **envp, t_env **env);
 void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));
 void	cleaner_envlist(t_env **lst);
 
@@ -249,7 +249,7 @@ void	handle_dollar_invalid_syntax(char *str, t_xpdr *xpdr);
 t_env	*lstlast(t_env *lst);
 void	lstadd_back(t_env **lst, t_env *new);
 t_env	*lstnew(char *key, char *value);
-void	env_init_list(char **envp, t_env **envlist);
+void	env_init_list(char **envp, t_env **env);
 void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));
 void	cleaner_envlist(t_env **lst);
 int		no_path_env(t_cmd *cmd, t_exe exe, t_env *env);
@@ -289,7 +289,7 @@ void	no_file_or_dir(t_cmd *cmd, const char *prefix, size_t prefix_len);
 int		builtins(t_cmd *cmd, t_exe exe, t_env **env);
 int		builtin_exit(t_cmd *cmd);
 int		builtin_pwd(t_env *env);
-int		builtin_cd(t_cmd	*cmd, t_env **env);
+int		builtin_cd(t_cmd *cmd, t_env **env);
 int     builtin_env(t_cmd *cmd, t_env *envlist);
 int		builtin_echo(t_cmd *cmd, t_env *envlist); // Añadido t_env *envlist
 int		builtin_export(t_cmd *cmd, t_env **env);

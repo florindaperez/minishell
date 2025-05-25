@@ -89,7 +89,7 @@ static bool is_valid_env_key(const char *key)
 * Procesa un único argumento para el comando export (ej: "VAR=value" o "VAR").
 * Valida el argumento y lo añade/actualiza en la lista de entorno.
 */
-static int process_export_argument(const char *arg, t_cmd *cmd_struct, t_env **env_list_ptr)
+static int process_export_argument(const char *arg, t_cmd *cmd_struct, t_env **env_ptr)
 {
     (void)cmd_struct;
 	char *key = NULL;
@@ -155,7 +155,7 @@ static int process_export_argument(const char *arg, t_cmd *cmd_struct, t_env **e
     // Usar la función update_env de jocuni que toma t_env* y devuelve t_env*
     // Esta función ya está en src/builtins/utils_export/var_exists.c
     // y maneja la actualización o adición a la lista.
-    *env_list_ptr = update_env(*env_list_ptr, key, value_str);
+    *env_ptr = update_env(*env_ptr, key, value_str);
     // No hay un código de error específico de update_env que podamos verificar aquí fácilmente,
     // asumimos que maneja errores de malloc internamente (ej. retornando el envlist original).
 
@@ -169,7 +169,7 @@ static int process_export_argument(const char *arg, t_cmd *cmd_struct, t_env **e
 * Agrega o modifica variables en el entorno, o muestra todas las variables exportables.
 * Adaptado de la lógica de flperez para usar las estructuras de jocuni.
 */
-int builtin_export(t_cmd *cmd, t_env **env_list_ptr) // Firma de jocuni
+int builtin_export(t_cmd *cmd, t_env **env_ptr) // Firma de jocuni
 {
     int i;
     int overall_ret_status;
@@ -180,7 +180,7 @@ int builtin_export(t_cmd *cmd, t_env **env_list_ptr) // Firma de jocuni
     // Si no hay argumentos (solo "export")
     if (cmd->commands[i] == NULL)
     {
-        just_export(*env_list_ptr); // Llama a la función de jocuni para imprimir
+        just_export(*env_ptr); // Llama a la función de jocuni para imprimir
         set_exit_status(0);
         return (0);
     }
@@ -188,7 +188,7 @@ int builtin_export(t_cmd *cmd, t_env **env_list_ptr) // Firma de jocuni
     // Procesar cada argumento
     while (cmd->commands[i] != NULL)
     {
-        if (process_export_argument(cmd->commands[i], cmd, env_list_ptr) == EXIT_FAILURE)
+        if (process_export_argument(cmd->commands[i], cmd, env_ptr) == EXIT_FAILURE)
         {
             overall_ret_status = EXIT_FAILURE; // Si algún argumento falla, el estado general es de fallo
             // Bash continúa procesando los siguientes argumentos incluso si uno es inválido.
