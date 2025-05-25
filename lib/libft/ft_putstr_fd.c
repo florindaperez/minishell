@@ -14,11 +14,14 @@
 escribir el string apuntado por s en el descriptor de archivo especificado
 por 'fd'.
 La función 'write' toma como argumentos el descriptor de archivo (fd), un
-puntero al inicio de la string y la longitud del buffer.*/
+puntero al inicio de la string y la longitud del buffer.
+
+==== *s pasa de char a const char 20250523 flperez ======
+*/
 
 #include "libft.h"
 
-void	ft_putstr_fd(char *s, int fd)
+void	ft_putstr_fd(const char *s, int fd)
 {
 	write(fd, s, ft_strlen(s));
 }

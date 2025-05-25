@@ -29,9 +29,11 @@ char	*ft_strdup(const char *s1)
 }*/
 /*ALTERNATIVA*/
 /*The strdup() function allocates sufficient memory for a copy of the 
-string s1, does the copy, and returns a pointer to it.*/
+string s1, does the copy, and returns a pointer to it.
+==== *s1 pasa de char a const char 20250523 flperez ======
+*/
 
-char	*ft_strdup(char *s1)
+char	*ft_strdup(const char *s1)
 {
 	char	*dup;
 	int		len;
