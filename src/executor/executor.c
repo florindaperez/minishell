@@ -105,7 +105,7 @@ int	pre_executor(t_env **env, t_cmd *cmd, t_exe *exe, int size_pipe)
 		if (is_builtins(cmd) && (size_pipe == 1))
 		{
 			free(exe->pid);
-			return (builtins(cmd, *exe, env));
+			return (builtins(cmd, env));
 		}
 		if (no_path_env(cmd, *exe, *env))
 			return (1);

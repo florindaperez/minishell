@@ -59,3 +59,15 @@ void	str_free_and_null(char **str)
 		free(*str);
 	*str = NULL;
 }
+/*
+ * free_ptr: Libera un puntero si no es NULL.
+ * Función básica de utilidad para evitar liberar NULL, aunque free(NULL) es
+ * seguro por el estándar C.
+*/
+void	free_ptr(void *ptr)
+{
+	if (ptr != NULL)
+	{
+		free(ptr);
+	}
+}

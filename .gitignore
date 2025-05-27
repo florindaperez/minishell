@@ -15,3 +15,10 @@
 *.a
 *.out
 *.txt
+
+
+minitester-minishell-tester/
+tester_builtin_echo_pwd.sh
+tester_builtin_export_unset_env.sh
+
+

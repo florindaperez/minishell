@@ -32,6 +32,13 @@
 # include <errno.h>
 # include <sys/stat.h>
 # include <stdbool.h>
+/*-------- Defines para Rutas --------*/
+// Fallback para PATH_MAX si no está definido por <limits.h>
+#ifndef PATH_MAX
+    #define MINISHELL_PATH_BUF_SIZE 4096 // Un tamaño común y generoso para rutas
+#else
+    #define MINISHELL_PATH_BUF_SIZE PATH_MAX
+#endif
 
 /*-----------------Defines-------------*/
 # define EXIT_SUCCESS 0
@@ -275,6 +282,7 @@ int		ca_strchr(const char *s, int c);
 char	*ft_strncpy(char *dest, char *src, unsigned int n);
 void	*p_malloc(size_t size);
 void	str_free_and_null(char **str);
+void	free_ptr(void *ptr);
 
 void	signal_child(int sig);
 void	signal_parent(int sig);
@@ -286,33 +294,34 @@ void	command_not_found(t_cmd *cmd, const char *prefix, size_t prefix_len);
 void	no_file_or_dir(t_cmd *cmd, const char *prefix, size_t prefix_len);
 
 /*--------------------------- builtins -------------------------*/
-int		builtins(t_cmd *cmd, t_exe exe, t_env **env);
-int		builtin_exit(t_cmd *cmd);
+int		builtins(t_cmd *cmd, t_env **env);
+int		builtin_exit(t_cmd *cmd, t_env **envlist);
 int		builtin_pwd(t_env *env);
-int		builtin_cd(t_cmd *cmd, t_env **env);
-int     builtin_env(t_cmd *cmd, t_env *envlist);
-int		builtin_echo(t_cmd *cmd, t_env *envlist); // Añadido t_env *envlist
+int		builtin_cd(t_cmd *cmd, t_env **env_list);
+int     builtin_env(t_cmd *cmd, t_env *env);
+int		builtin_echo(t_cmd *cmd, t_env *env); // Añadido t_env *env
 int		builtin_export(t_cmd *cmd, t_env **env);
 int		builtin_unset(t_cmd *cmd, t_env **env);
 int		builtin_unset(t_cmd *cmd, t_env **env);
 int		is_builtins(t_cmd *cmd);
 int		exist_cwd(void);
 
-/*--------------------------- utils_cd utils_cd_2 ---------------*/
-int		handle_no_argument(t_cmd *cmd);
-int		handle_tilde(t_cmd *cmd);
-int		handle_dash(t_cmd *cmd);
-int		handle_dot(t_cmd *cmd);
-int		handle_invalid_path(t_cmd *cmd);
-void	update_environment(t_env *env, char *current_wd);
-int		free_current_wd(char *current_wd);
-int		go_home(void);
+/*--------------------------- utils builtins ---------------*/
+
+char	*util_cd_get_env_val(t_env *env_list, const char *var_name);
+void	util_cd_set_env_val(t_env **env_list, const char *var_name,
+	const char *value);
+bool	util_cd_capture_old_work_dir(char *buffer, size_t buf_size,
+	t_env *env_list);
+long long	ft_atoll_for_exit(const char *str, bool *error);
+
+
+
 /*--------------------------- builtin export -------------------------*/
-int		check_export(char *arg);
-int		variable_exists(t_env **env, char **variable);
-int		variable_exists_op2(t_env *env, char *variable);
+
+
 int		variable_exists_op3(t_env *env, char *variable);
-t_env	*variable_exists_op4(t_env *env, char *key);
+t_env	*variable_exists_op4(t_env *env, const char *key);
 t_env	*update_env(t_env *env, char *key, char *val);
 
 
@@ -320,7 +329,7 @@ t_env	*update_env(t_env *env, char *key, char *val);
 int		check_syntax(char *cmd);
 
 /*-----------------------oldpwd---------------------*/
-int		var_exists_oldpwd(t_env *env, char *variable);
+
 char	*update_pwd(t_env *env);
 int		set_old_pwd(void);
 int		get_old_pwd(char *current_wd, t_env *env);
@@ -343,5 +352,8 @@ int		exist_redirections(t_cmd *cmd);
 /*-------------------heredoc-------------------*/
 int		heredoc_create(t_redir *redir, int hd_nbr);
 int		heredoc(t_cmd *cmd);
+/*--- Manejo de Errores ---*/
+int			msg_error_cmd(char *arg_cmd, char *descrip,
+				char *err_msg, int nb_err);
 
 #endif
