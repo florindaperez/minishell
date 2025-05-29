@@ -11,19 +11,19 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
-
+#include "minishell_executor.h"
 /*
  * Configuración inicial del proceso hijo:
  * - Restaura el comportamiento por defecto de SIGINT y SIGQUIT.
- * - Si el parser marcó un error de redirección previo, sale con g_exit_status.
+ * - Si el parser marcó un error de redirección previo, sale con g_get_signal.
  */
-static void	child_initial_setup(t_cmd *cmd)
+static void	child_initial_setup(t_cmd_exe *cmd)
 {
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	if (cmd && cmd->redir_error)
 	{
-		exit(g_exit_status);
+		exit(g_get_signal);
 	}
 }
 
@@ -31,9 +31,9 @@ static void	child_initial_setup(t_cmd *cmd)
  * Maneja la redirección de entrada de archivo ('<') si es necesario.
  * Asume que redirect_io maneja la apertura y los errores.
  * Retorna true si la redirección fue exitosa o no era necesaria,
- * false si falló (redirect_io debería haber establecido g_exit_status).
+ * false si falló (redirect_io debería haber establecido g_get_signal).
  */
-static bool	child_handle_file_input(t_cmd *cmd)
+static bool	child_handle_file_input(t_cmd_exe *cmd)
 {
 	if (cmd && cmd->io && cmd->io->infile && cmd->io->fd_in == -1)
 	{
@@ -50,7 +50,7 @@ static bool	child_handle_file_input(t_cmd *cmd)
  * en error.
  * Codigo fallo execve = 126
  */
-static void	child_exec_external(t_cmd *cmd, t_data_env *data, char **argv)
+static void	child_exec_external(t_cmd_exe *cmd, t_data_env_exe *data, char **argv)
 {
 	int	path_error_code;
 
@@ -59,14 +59,14 @@ static void	child_exec_external(t_cmd *cmd, t_data_env *data, char **argv)
 		if (!find_command_path(cmd, data) || !cmd->path)
 		{
 			msg_error_cmd(argv[0], NULL, "command not found", 127);
-			free_str_tab(argv);
+			str_free_and_null(argv);
 			exit(127);
 		}
 	}
 	path_error_code = get_path_execution_errors(cmd->path, argv[0]);
 	if (path_error_code != 0)
 	{
-		free_str_tab(argv);
+		str_free_and_null(argv);
 		exit(path_error_code);
 	}
 	execve(cmd->path, argv, data->env);
@@ -74,7 +74,7 @@ static void	child_exec_external(t_cmd *cmd, t_data_env *data, char **argv)
 	if (errno == ENOENT)
 		path_error_code = 127;
 	msg_error_cmd(cmd->path, NULL, strerror(errno), path_error_code);
-	free_str_tab(argv);
+	str_free_and_null(argv);
 	exit(path_error_code);
 }
 
@@ -82,7 +82,7 @@ static void	child_exec_external(t_cmd *cmd, t_data_env *data, char **argv)
  * Decide el tipo de comando (vacío, builtin, externo) y lo ejecuta.
  * Esta función siempre termina el proceso hijo.
  */
-static void	execute_prepared_command(t_cmd *cmd, t_data_env *data, \
+static void	execute_prepared_command(t_cmd_exe *cmd, t_data_env_exe *data, \
 										char **argv_for_exec)
 {
 	int	builtin_exit_status;
@@ -94,13 +94,13 @@ static void	execute_prepared_command(t_cmd *cmd, t_data_env *data, \
 	}
 	if (!argv_for_exec[0])
 	{
-		free_str_tab(argv_for_exec);
+		str_free_and_null(argv_for_exec);
 		exit(EXIT_SUCCESS);
 	}
 	if (cmd->is_builtin)
 	{
 		builtin_exit_status = execute_builtin(cmd, data, argv_for_exec);
-		free_str_tab(argv_for_exec);
+		str_free_and_null(argv_for_exec);
 		exit(builtin_exit_status);
 	}
 	child_exec_external(cmd, data, argv_for_exec);
@@ -117,18 +117,18 @@ static void	execute_prepared_command(t_cmd *cmd, t_data_env *data, \
  * @param pipe_in_fd Descriptor de lectura del pipe de entrada (-1 si no hay).
  * @param pipe_out_fd Descriptor de escritura del pipe de salida (-1 si no hay).
  */
-void	execute_child_process(t_cmd *cmd, t_data_env *data,
+void	execute_child_process(t_cmd_exe *cmd, t_data_env_exe *data,
 								int pipe_in_fd, int pipe_out_fd)
 {
 	char	**argv_for_exec;
 
 	child_initial_setup(cmd);
 	if (!child_handle_file_input(cmd))
-		exit(g_exit_status);
+		exit(g_get_signal);
 	setup_child_redirections(cmd, pipe_in_fd, pipe_out_fd);
 	argv_for_exec = build_argv_from_args(cmd->args);
 	if (!argv_for_exec)
-		exit(g_exit_status);
+		exit(g_get_signal);
 	execute_prepared_command(cmd, data, argv_for_exec);
 	exit(EXIT_FAILURE);
 }

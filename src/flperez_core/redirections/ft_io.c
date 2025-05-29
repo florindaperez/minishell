@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+# include "minishell_executor.h"
 
 /*
  * ft_io.c:
@@ -20,12 +21,12 @@
  */
 
 /*
- * Inicializa los campos de la estructura t_cmd_io a sus valores por defecto
+ * Inicializa los campos de la estructura t_cmd_io_exe a sus valores por defecto
  * (NULL o -1 para punteros y descriptores de fichero, false para booleanos).
  *
- * io: Puntero a la estructura t_cmd_io que se va a inicializar.
+ * io: Puntero a la estructura t_cmd_io_exe que se va a inicializar.
  */
-void	init_io_fds(t_cmd_io *io)
+void	init_io_fds(t_cmd_io_exe *io)
 {
 	if (!io)
 		return ;
@@ -53,9 +54,9 @@ void	init_io_fds(t_cmd_io *io)
  * false si ocurrió algún error durante el proceso.
  * En caso de error, intenta restaurar los descriptores afectados.
  */
-bool	redirect_io(t_cmd *cmd)
+bool	redirect_io(t_cmd_exe *cmd)
 {
-	t_cmd_io	*io;
+	t_cmd_io_exe	*io;
 	char		*cmd_name_for_error;
 
 	if (!cmd || !cmd->io)
@@ -84,7 +85,7 @@ bool	redirect_io(t_cmd *cmd)
  * io: Puntero a la estructura t_cmd_io.
  * success_ptr: Puntero a un booleano que se establece a false si dup2 falla.
  */
-static void	process_restore_stdin(t_cmd_io *io, bool *success_ptr)
+static void	process_restore_stdin(t_cmd_io_exe *io, bool *success_ptr)
 {
 	if (io->stdin_backup != -1)
 	{
@@ -110,7 +111,7 @@ static void	process_restore_stdin(t_cmd_io *io, bool *success_ptr)
  * io: Puntero a la estructura t_cmd_io.
  * success_ptr: Puntero a un booleano que se establece a false si dup2 falla.
  */
-static void	process_restore_stdout(t_cmd_io *io, bool *success_ptr)
+static void	process_restore_stdout(t_cmd_io_exe *io, bool *success_ptr)
 {
 	if (io->stdout_backup != -1)
 	{
@@ -135,12 +136,12 @@ static void	process_restore_stdout(t_cmd_io *io, bool *success_ptr)
  * También cierra los descriptores de fichero que se abrieron para las
  * redirecciones (io->fd_in, io->fd_out).
  *
- * io: Puntero a la estructura t_cmd_io que contiene los backups y fds.
+ * io: Puntero a la estructura t_cmd_io_exe que contiene los backups y fds.
  *
  * Retorna: true si la restauración fue completamente exitosa.
  * false si alguna llamada a dup2(2) falló durante la restauración.
  */
-bool	restore_io(t_cmd_io *io)
+bool	restore_io(t_cmd_io_exe *io)
 {
 	bool	success;
 

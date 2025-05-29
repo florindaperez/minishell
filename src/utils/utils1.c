@@ -52,12 +52,24 @@ char	*ft_strncpy(char *dest, char *src, unsigned int n)
 	return (dest);
 }
 
-/*Frees and sets to NULL a char *str passed as argument by reference*/
+/*
+ * str_free_and_null: Libera un array de strings terminado en NULL (char **).
+ * Recorre el array liberando cada string y finalmente el propio array.
+*/
 void	str_free_and_null(char **str)
 {
-	if (*str != NULL)
-		free(*str);
-	*str = NULL;
+	int	i;
+
+	if (!str)
+		return ;
+	i = 0;
+	while (str[i])
+	{
+		free_ptr(str[i]);
+		str[i] = NULL;
+		i++;
+	}
+	free(str);
 }
 /*
  * free_ptr: Libera un puntero si no es NULL.

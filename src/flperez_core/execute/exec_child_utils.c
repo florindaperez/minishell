@@ -11,23 +11,24 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+#include "minishell_executor.h"
 
 /*
  * Maneja casos de comando vacío literal ("" o '') o expansión a cadena vacía.
  * Esta función siempre termina el proceso hijo con el código de salida 
  * apropiado.
  */
-void	child_handle_empty_or_not_found(t_cmd *cmd, char **argv)
+void	child_handle_empty_or_not_found(t_cmd_exe *cmd, char **argv)
 {
 	if (cmd->was_literal_empty_command)
 	{
 		msg_error_cmd("", NULL, "command not found", 127);
-		free_str_tab(argv);
+		str_free_and_null(argv);
 		exit(127);
 	}
 	else if (argv[0] && argv[0][0] == '\0')
 	{
-		free_str_tab(argv);
+		str_free_and_null(argv);
 		exit(EXIT_SUCCESS);
 	}
 }

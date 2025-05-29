@@ -45,7 +45,7 @@ int	builtin_pwd(t_env *env)
 *	Esta función puede ser llamada por otras partes del shell, como por ejemplo
 *	el comando 'cd', para mantener la variable "PWD" sincronizada.
 *	Retorna NULL; su propósito es el efecto secundario de actualizar el entorno.
-*/
+*
 char	*update_pwd(t_env *env)
 {
 	char	*current_wd;
@@ -59,7 +59,7 @@ char	*update_pwd(t_env *env)
 	free(current_wd);
 	return (NULL);
 }
-
+*/
 /*
 *	exist_cwd:
 *	Comprueba si el directorio de trabajo actual es accesible.

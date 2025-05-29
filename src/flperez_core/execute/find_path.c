@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+# include "minishell_executor.h"
 
 /*
  * Une dos componentes de ruta con un '/'.
@@ -49,7 +50,7 @@ static char	*ft_strjoin_path(char const *s1, char const *s2)
  * 0 si no es una ruta explícita (no contiene '/').
  * -1 si es una ruta explícita pero hay un error (no existe o fallo de strdup).
  */
-static int	handle_explicit_path(t_cmd *cmd, char *cmd_name)
+static int	handle_explicit_path(t_cmd_exe *cmd, char *cmd_name)
 {
 	if (ft_strchr(cmd_name, '/') == NULL)
 		return (0);
@@ -105,7 +106,7 @@ static char	*search_in_paths_array(char **paths, char *cmd_name)
  * data => Datos del entorno que contienen la variable PATH.
  * return => true si se encuentra y se asigna, false en caso contrario o error.
  */
-static bool	try_search_in_env_path(t_cmd *cmd, char *cmd_name, t_data_env *data)
+static bool	try_search_in_env_path(t_cmd_exe *cmd, char *cmd_name, t_data_env_exe *data)
 {
 	char	*path_env_value;
 	char	**paths_array;
@@ -122,7 +123,7 @@ static bool	try_search_in_env_path(t_cmd *cmd, char *cmd_name, t_data_env *data)
 		return (false);
 	}
 	found_path_str = search_in_paths_array(paths_array, cmd_name);
-	free_str_tab(paths_array);
+	str_free_and_null(paths_array);
 	if (!found_path_str)
 		return (false);
 	if (found_path_str[0] == '\0')
@@ -140,7 +141,7 @@ static bool	try_search_in_env_path(t_cmd *cmd, char *cmd_name, t_data_env *data)
  * data => Puntero a los datos del entorno.
  * return => true si la ruta es válida y se encuentra, false si no.
  */
-bool	find_command_path(t_cmd *cmd, t_data_env *data)
+bool	find_command_path(t_cmd_exe *cmd, t_data_env_exe *data)
 {
 	char	*cmd_name;
 	int		explicit_status;

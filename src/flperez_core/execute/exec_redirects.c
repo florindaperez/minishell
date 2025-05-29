@@ -9,9 +9,8 @@
 /*   Updated: 2025/05/10 16:14:45 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-/* En un archivo como exec_redirects.c */
 #include "minishell.h" // Incluir lo necesario
+#include "minishell_executor.h"
 
 static void	redirect_fd(int old_fd, int new_fd, const char *error_msg_prefix)
 {
@@ -23,7 +22,7 @@ static void	redirect_fd(int old_fd, int new_fd, const char *error_msg_prefix)
  * Configura las redirecciones de E/S para un proceso hijo.
  * Usa pipes y descriptores de archivo ya abiertos en cmd->io.
  */
-void	setup_child_redirections(t_cmd *cmd, int pipe_in_fd,
+void	setup_child_redirections(t_cmd_exe *cmd, int pipe_in_fd,
 									int pipe_out_fd)
 {
 	bool	stdin_redirected;

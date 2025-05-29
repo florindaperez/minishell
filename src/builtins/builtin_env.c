@@ -68,7 +68,7 @@ int
 
 /*
  * Verifica si la variable de entorno PATH está definida en env.
- * Es llamada por pre_executor.
+ * Es llamada por pre_executor.	FUNCION ELIMINADA YA NO ES LLAMADA 
  *
  * Parámetros:
  * cmd: Estructura del comando actual (para ft_msgs).
@@ -78,7 +78,7 @@ int
  * Retorna:
  * 0 si PATH existe.
  * 1 si PATH no existe (e imprime un mensaje de error).
- */
+ *
 int	no_path_env(t_cmd *cmd, t_exe exe, t_env *env)
 {
 	(void) exe;
@@ -89,3 +89,4 @@ int	no_path_env(t_cmd *cmd, t_exe exe, t_env *env)
 	}
 	return (0);
 }
+*/

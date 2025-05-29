@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+# include "minishell_executor.h"
 
 /*creates a temp file to store the content of the heredoc until the delimiter
  is encountered.*/

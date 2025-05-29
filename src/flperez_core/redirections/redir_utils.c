@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+# include "minishell_executor.h"
 
 /*
  * redir_utils.c:
@@ -30,7 +31,7 @@
  *
  * Retorna: 0 en caso de éxito o si el directorio ya existía.
  * -1 en caso de error al llamar a mkdir (y errno no sea EEXIST).
- * Establece g_exit_status en 1 en caso de error.
+ * Establece g_get_signal en 1 en caso de error.
  */
 static int	attempt_mkdir_if_needed(const char *path_to_create,
 	char *err_buf)
@@ -45,7 +46,7 @@ static int	attempt_mkdir_if_needed(const char *path_to_create,
 			snprintf(err_buf, 1024,
 				"minishell: redir_utils: mkdir (%s)", path_to_create);
 			perror(err_buf);
-			g_exit_status = 1;
+			g_get_signal = 1;
 			ret = -1;
 		}
 	}
@@ -68,7 +69,7 @@ static char	*extract_dir_path_component(const char *filepath)
 	if (!dir_path_to_create)
 	{
 		perror("minishell: redir_utils: ft_strndup failed");
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (NULL);
 	}
 	return (dir_path_to_create);
@@ -82,7 +83,7 @@ static char	*extract_dir_path_component(const char *filepath)
  *
  * Retorna: 0 en caso de éxito (directorio existe o fue creado).
  * -1 en caso de error (ej. ft_strndup falló, o mkdir falló).
- * Establece g_exit_status en 1 en caso de error.
+ * Establece g_get_signal en 1 en caso de error.
  */
 int	redir_create_path_if_needed(const char *filepath)
 {
@@ -93,7 +94,7 @@ int	redir_create_path_if_needed(const char *filepath)
 	if (!filepath)
 		return (-1);
 	dir_path_to_create = extract_dir_path_component(filepath);
-	if (g_exit_status == 1 && !dir_path_to_create)
+	if (g_get_signal == 1 && !dir_path_to_create)
 		return (-1);
 	if (!dir_path_to_create)
 		return (0);
@@ -117,7 +118,7 @@ int	redir_create_path_if_needed(const char *filepath)
  * Retorna: El nombre del comando si está disponible.
  * NULL si no hay argumentos o el primer argumento es inválido.
  */
-char	*redir_determine_cmd_name(t_cmd *cmd)
+char	*redir_determine_cmd_name(t_cmd_exe *cmd)
 {
 	if (cmd && cmd->args && cmd->args[0]
 		&& cmd->args[0]->value && cmd->args[0]->value[0] != '\0')
@@ -132,13 +133,13 @@ char	*redir_determine_cmd_name(t_cmd *cmd)
  * Los descriptores originales se guardan en io->stdin_backup y 
  * io->stdout_backup.
  *
- * io: Puntero a la estructura t_cmd_io que contiene la información de E/S.
+ * io: Puntero a la estructura t_cmd_io_exe que contiene la información de E/S.
  *
  * Retorna: true si la copia de seguridad fue exitosa o no fue necesaria.
  * false si falló la llamada a dup(2).
- * Establece g_exit_status en 1 en caso de fallo.
+ * Establece g_get_signal en 1 en caso de fallo.
  */
-bool	redir_backup_fds(t_cmd_io *io)
+bool	redir_backup_fds(t_cmd_io_exe *io)
 {
 	if (!io)
 		return (false);
@@ -151,7 +152,7 @@ bool	redir_backup_fds(t_cmd_io *io)
 			perror("minishell: redir_utils: dup backup failed");
 			safe_close(&io->stdin_backup);
 			safe_close(&io->stdout_backup);
-			g_exit_status = 1;
+			g_get_signal = 1;
 			return (false);
 		}
 	}

@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+#include "minishell_executor.h"
 
 /*
  * Tareas del padre después de un fork en el bucle de la pipeline.
@@ -58,18 +59,18 @@ int	get_specific_child_exit_status(pid_t child_pid)
  * Maneja casos especiales: sin comandos o si es un builtin del padre.
  * Retorna true si la ejecución de la pipeline debe continuar, false si no.
  */
-bool	handle_pipeline_preliminaries(t_cmd *cmds, t_data_env *data)
+bool	handle_pipeline_preliminaries(t_cmd_exe *cmds, t_data_env_exe *data)
 {
 	if (!cmds)
 	{
-		g_exit_status = 0;
+		g_get_signal = 0;
 		return (false);
 	}
 	if (!cmds->next && is_parent_builtin(cmds))
 	{
 		if (cmds->redir_error)
 		{
-			g_exit_status = 1;
+			g_get_signal = 1;
 			if (cmds->io)
 			{
 				safe_close(&cmds->io->fd_in);
@@ -77,7 +78,7 @@ bool	handle_pipeline_preliminaries(t_cmd *cmds, t_data_env *data)
 			}
 		}
 		else
-			g_exit_status = execute_parent_builtin(cmds, data);
+			g_get_signal = execute_parent_builtin(cmds, data);
 		return (false);
 	}
 	return (true);

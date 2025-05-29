@@ -11,11 +11,12 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+# include "minishell_executor.h"
 
 /* Prototipos internos si son necesarios por el orden */
-/* static bool open_and_dup_outfile(t_cmd_io *io, char *cmd_name_for_err, */
+/* static bool open_and_dup_outfile(t_cmd_io_exe *io, char *cmd_name_for_err, */
 /* mode_t mode); */
-/* static bool handle_existing_redir_out_fd(t_cmd_io *io, */
+/* static bool handle_existing_redir_out_fd(t_cmd_io_exe *io, */
 /* char *cmd_name_for_err); */
 
 /*
@@ -23,7 +24,7 @@
  * Solo abre el archivo de salida especificado. Devuelve fd o -1.
  * Extraída de open_and_dup_outfile para reducir líneas.
  */
-static int	open_outfile_for_redir(t_cmd_io *io, char *cmd_name_for_err,
+static int	open_outfile_for_redir(t_cmd_io_exe *io, char *cmd_name_for_err,
 	int open_flags, mode_t mode)
 {
 	int	fd;
@@ -36,7 +37,7 @@ static int	open_outfile_for_redir(t_cmd_io *io, char *cmd_name_for_err,
 	{
 		msg_error_cmd(cmd_name_for_err, io->outfile, \
 						strerror(saved_errno_out), 1);
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (-1);
 	}
 	return (fd);
@@ -47,7 +48,7 @@ static int	open_outfile_for_redir(t_cmd_io *io, char *cmd_name_for_err,
  * Abre (usando helper), duplica a STDOUT_FILENO y maneja errores de dup2.
  * Ahora cumple el límite de líneas.
  */
-static bool	open_and_dup_outfile(t_cmd_io *io, char *cmd_name_for_err,
+static bool	open_and_dup_outfile(t_cmd_io_exe *io, char *cmd_name_for_err,
 	mode_t mode)
 {
 	int	open_flags;
@@ -77,7 +78,7 @@ static bool	open_and_dup_outfile(t_cmd_io *io, char *cmd_name_for_err,
  * Gestiona la redirección de entrada para un comando. Mantiene la lógica
  * original (prioriza fd_in sobre infile). Llama a open_and_dup_infile (movida).
  */
-bool	redir_handle_input(t_cmd *cmd, t_cmd_io *io, char *cmd_name_for_err)
+bool	redir_handle_input(t_cmd_exe *cmd, t_cmd_io_exe *io, char *cmd_name_for_err)
 {
 	(void)cmd;
 	if (!io)
@@ -87,7 +88,7 @@ bool	redir_handle_input(t_cmd *cmd, t_cmd_io *io, char *cmd_name_for_err)
 		if (dup2(io->fd_in, STDIN_FILENO) == -1)
 		{
 			msg_error_cmd(cmd_name_for_err, "stdin", "dup2 failed", 1);
-			g_exit_status = 1;
+			g_get_signal = 1;
 			return (false);
 		}
 	}
@@ -102,7 +103,7 @@ bool	redir_handle_input(t_cmd *cmd, t_cmd_io *io, char *cmd_name_for_err)
 /*
  * Función auxiliar para manejar dup2 de un fd de salida existente (io->fd_out).
  */
-static bool	handle_existing_redir_out_fd(t_cmd_io *io, char *cmd_name_for_err)
+static bool	handle_existing_redir_out_fd(t_cmd_io_exe *io, char *cmd_name_for_err)
 {
 	char	*err_arg;
 
@@ -113,7 +114,7 @@ static bool	handle_existing_redir_out_fd(t_cmd_io *io, char *cmd_name_for_err)
 		else
 			err_arg = "stdout";
 		msg_error_cmd(cmd_name_for_err, err_arg, "dup2 failed", 1);
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (false);
 	}
 	return (true);
@@ -123,7 +124,7 @@ static bool	handle_existing_redir_out_fd(t_cmd_io *io, char *cmd_name_for_err)
  * Gestiona la redirección de salida para un comando.
  * Cumple Norminette (líneas, ternario) manteniendo lógica original.
  */
-bool	redir_handle_output(t_cmd *cmd, t_cmd_io *io, char *cmd_name_for_err)
+bool	redir_handle_output(t_cmd_exe *cmd, t_cmd_io_exe *io, char *cmd_name_for_err)
 {
 	mode_t	mode;
 

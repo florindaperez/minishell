@@ -10,17 +10,17 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h" // Incluye headers, estructuras, prototipos necesarios
-
+#include "minishell.h"
+# include "minishell_executor.h"
 /*
  * Restaura STDIN_FILENO y/o STDOUT_FILENO desde sus copias de seguridad
  * si existen, según el modo especificado.
  */
-void	redir_restore_fds_on_fail(t_cmd_io *io, t_restore_mode mode)
+void	redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode_exe mode)
 {
 	if (!io)
 		return ;
-	if (mode == RESTORE_BOTH || mode == RESTORE_STDOUT_ONLY)
+	if (mode == RESTORE_BOTH_EXEC || mode == RESTORE_STDOUT_ONLY_EXEC)
 	{
 		if (io->stdout_backup != -1)
 		{
@@ -29,7 +29,7 @@ void	redir_restore_fds_on_fail(t_cmd_io *io, t_restore_mode mode)
 			io->stdout_backup = -1;
 		}
 	}
-	if (mode == RESTORE_BOTH || mode == RESTORE_STDIN_ONLY)
+	if (mode == RESTORE_BOTH_EXEC || mode == RESTORE_STDIN_ONLY_EXEC)
 	{
 		if (io->stdin_backup != -1)
 		{
@@ -45,7 +45,7 @@ void	redir_restore_fds_on_fail(t_cmd_io *io, t_restore_mode mode)
  * su descriptor de fichero a STDIN_FILENO. Mantiene la lógica original.
  * (Función movida de redir_process.c)
  */
-bool	open_and_dup_infile(t_cmd_io *io, char *cmd_name_for_err)
+bool	open_and_dup_infile(t_cmd_io_exe *io, char *cmd_name_for_err)
 {
 	int	saved_errno;
 
@@ -61,18 +61,18 @@ bool	open_and_dup_infile(t_cmd_io *io, char *cmd_name_for_err)
 		else
 			msg_error_cmd(cmd_name_for_err, io->infile, \
 							strerror(saved_errno), 1);
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (false);
 	}
 	if (dup2(io->fd_in, STDIN_FILENO) == -1)
 	{
 		msg_error_cmd(cmd_name_for_err, io->infile, "dup2 failed", 1);
 		safe_close(&io->fd_in);
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (false);
 	}
 	return (true);
 }
 
 /* Aquí también iría la función redir_restore_fds_on_fail si la moviste antes */
-/* void redir_restore_fds_on_fail(t_cmd_io *io, t_restore_mode mode) { ... } */
+/* void redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode mode) { ... } */

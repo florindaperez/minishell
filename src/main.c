@@ -34,117 +34,181 @@ int	main(int ac, char *av[], char *envp[])
 	return (0);
 }
 */
-#include "minishell.h" // Ensure this includes necessary headers for ft_split, ft_strcmp,
-                       // and all your processing functions (tokenizer, parser, executor, etc.)
+#include "minishell.h"         // Primero, para definir t_cmd, t_env, etc.
+#include "minishell_executor.h" // Luego, para usar t_cmd en sus prototipos y definir t_cmd_exe, etc.
 
-// Global variable from your project
-int	g_get_signal = 0;
+// Variable global de tu proyecto
+int g_get_signal = 0;
 
-int	main(int ac, char *av[], char *envp[])
+int main(int ac, char *av[], char *envp[])
 {
-	t_env	*envlist = NULL;
-	// Variables for -c mode
-	char	**arg_input;
-	int		i;
-	// Variables for command processing (similar to those in your main_process or minishell functions)
-	t_tok	*tok;
-	t_cmd	*cmd;
-	t_exe	exe; 
-	// int		size_pipe; // exe.num_cmds will store this after init_exe
+    t_env   *envlist_bonus = NULL; // Tu lista de entorno de bonus
+    // Variables para -c mode
+    char    **arg_input_lines;
+    int     i;
 
-	env_init_list(envp, &envlist); // Initialize envlist once at the start
+    // Nueva estructura para el ejecutor de flperez
+    t_data_env_exe data_flperez;
 
-	if (ac == 3 && ft_strcmp(av[1], "-c") == 0 && av[2] && *av[2])
-	{
-		// Mode: Execute commands from argv[2]
-		set_signals(PARENT); // Set parent signals for the -c execution mode
+    // Configuración inicial de señales para el modo interactivo
+    signals_interactive(); // <--- CAMBIO: Llamada inicial a signals_interactive()
 
-		arg_input = ft_split(av[2], ';');
-		if (!arg_input)
-		{
-			// Handle ft_split allocation failure
-			write(2, "minishell: Error: ft_split failed in -c mode\n", 45);
-			cleaner_envlist(&envlist); // Clean up environment list
-			exit(EXIT_FAILURE);
-		}
+    env_init_list(envp, &envlist_bonus); // Inicializa tu t_env de bonus
 
-		i = 0;
-		while (arg_input[i])
-		{
-			char *current_command_line = arg_input[i];
-			tok = NULL; // Initialize for each command
-			cmd = NULL; // Initialize for each command
+    if (ac == 3 && ft_strcmp(av[1], "-c") == 0 && av[2] && *av[2])
+    {
+        // set_signals(PARENT); // <--- ELIMINADO: Ya no se usa el antiguo sistema
 
-			// Skip empty or whitespace-only command segments
-			// Your tokenizer already skips leading whitespace.
-			// If a command segment is empty after splitting (e.g., "cmd1;;cmd2"),
-			// tokenizer might result in tok being NULL.
-			
-			tokenizer(&tok, current_command_line);
+        arg_input_lines = ft_split(av[2], ';');
+        if (!arg_input_lines)
+        {
+            write(2, "minishell: Error: ft_split failed\n", 34);
+            cleaner_envlist(&envlist_bonus);
+            exit(EXIT_FAILURE);
+        }
 
-			if (tok == NULL) { // If tokenizer produced no tokens (e.g., empty command string)
-				i++;
-				continue;
-			}
-			
-			// Attempt to parse the tokens
-			if (parser(&cmd, tok) == 1)
-			{
-				// parser calls handle_error which sets g_get_signal and frees tok.
-				// cmd might be partially formed; cmd_free should handle it.
-				if (cmd)
-					cmd_free(&cmd);
-				i++;
-				continue; // Move to the next command in the sequence
-			}
-			// If parser succeeded (returned 0), tok is not yet freed by parser.
-			tok_free(&tok);
+        i = 0;
+        while (arg_input_lines[i])
+        {
+            char *current_command_line = arg_input_lines[i];
+            t_tok *token_list_bonus = NULL;
+            t_cmd *cmd_list_bonus = NULL;
 
-			// If parsing resulted in no command structures (e.g. valid but empty input like only spaces after split)
-			// This check might be redundant if parser itself guarantees a valid cmd or handles it by error.
-			// Assuming parser creates a valid cmd structure if it returns 0, even for "empty" commands
-			// that pass syntax checks. If cmd is NULL here, it implies an issue not caught above.
-			if (cmd == NULL) {
-				i++;
-				continue;
-			}
+            tokenizer(&token_list_bonus, current_command_line);
 
-			should_expand(cmd, envlist);
-			
-			init_exe(&exe, cmd); // Initialize t_exe structure (allocates exe.pid)
-			heredoc(cmd);        // Handle heredocs if any
+            if (token_list_bonus == NULL) {
+                i++;
+                continue;
+            }
+            
+            if (parser(&cmd_list_bonus, token_list_bonus) == 1)
+            {
+                if (cmd_list_bonus)
+                    cmd_free(&cmd_list_bonus);
+                i++;
+                continue;
+            }
+            tok_free(&token_list_bonus);
 
-			// size_pipe = cmd_size(cmd); // exe.num_cmds is set within init_exe
-			pre_executor(&envlist, cmd, &exe, exe.num_cmds); // Execute the command(s)
-			                                                 // pre_executor is responsible for freeing exe.pid
+            if (cmd_list_bonus == NULL) {
+                i++;
+                continue;
+            }
 
-			cmd_free(&cmd);      // Free command structure
+            // --- Lógica de expansión y heredoc (REVISAR según tus necesidades) ---
+            // Si tu parte "bonus" maneja la expansión antes de la traducción:
+            // should_expand(cmd_list_bonus, envlist_bonus); 
+            
+            // Si tu parte "bonus" prepara los heredocs (delimitador, comillas):
+            // heredoc(cmd_list_bonus); 
+            
+            // --- Preparación para el NUEVO executor de flperez ---
+            ft_memset(&data_flperez, 0, sizeof(t_data_env_exe));
 
-			i++;
-		}
-		free_arr2d(arg_input); // Free the array of command strings produced by ft_split
-		
-		int final_exit_status = g_get_signal; // Get the exit status of the last command
-		cleaner_envlist(&envlist); // Clean up environment list
-		exit(final_exit_status);   // Exit minishell with the determined status
-	}
-	else if (ac != 1) // Incorrect number of arguments for interactive mode
-	{
-		ft_msgs(10, NULL); // "Run minishell without arguments!"
-		cleaner_envlist(&envlist);
-		exit(EXIT_FAILURE);
-	}
-	else // (ac == 1) - Interactive mode
-	{
-		while (1)
-		{
-			set_signals(PARENT);
-			minishell(envlist); // Call your existing main interactive loop
-		}
-		// The following lines are likely unreachable if minishell() is an infinite loop
-		// but are good practice if the loop could terminate.
-		// cleaner_envlist(&envlist); 
-	}
+            data_flperez.cmds_head = convert_bonus_cmd_list_to_flperez_cmd_list(cmd_list_bonus);
+            
+            if (data_flperez.cmds_head == NULL && cmd_list_bonus != NULL)
+            {
+                write(2, "minishell: Error during command translation\n", 44);
+                cmd_free(&cmd_list_bonus);
+                i++;
+                continue;
+            }
 
-	return (0); // Should generally be unreachable
+            data_flperez.env = convert_bonus_envlist_to_flperez_envp(envlist_bonus);
+            if (!data_flperez.env && envlist_bonus)
+            {
+                write(2, "minishell: Error converting environment\n", 40);
+                free_flperez_cmd_list(data_flperez.cmds_head);
+                cmd_free(&cmd_list_bonus);
+                i++;
+                continue;
+            }
+
+            data_flperez.last_exit_status = g_get_signal;
+
+            if (data_flperez.cmds_head)
+            {
+                // execute_pipeline internamente llamará a signals_noninteractive()
+                // y luego a signals_interactive() al finalizar.
+                execute_pipeline(data_flperez.cmds_head, &data_flperez);
+                g_get_signal = data_flperez.last_exit_status;
+            }
+            
+            free_flperez_cmd_list(data_flperez.cmds_head);
+            free_arr2d(data_flperez.env);
+            cmd_free(&cmd_list_bonus);
+
+            i++;
+        }
+        free_arr2d(arg_input_lines);
+        
+        int final_exit_status = g_get_signal;
+        cleaner_envlist(&envlist_bonus);
+        exit(final_exit_status);
+    }
+    else if (ac != 1)
+    {
+        ft_msgs(10, NULL);
+        cleaner_envlist(&envlist_bonus);
+        exit(EXIT_FAILURE);
+    }
+    else // Modo Interactivo
+    {
+        while (1)
+        {
+            // Configurar señales para el modo interactivo ANTES de readline
+            signals_interactive(); // <--- CAMBIO: Llamada antes de readline()
+            
+            char *line = readline("minishell_bonus> ");
+            if (!line) 
+            {
+                write(1, "exit\n", 5);
+                break; 
+            }
+            if (*line)
+            {
+                add_history(line);
+                t_tok *token_list_bonus = NULL;
+                t_cmd *cmd_list_bonus = NULL;
+
+                tokenizer(&token_list_bonus, line);
+                if (token_list_bonus != NULL)
+                {
+                    if (parser(&cmd_list_bonus, token_list_bonus) == 0)
+                    {
+                        // --- Lógica de expansión y heredoc (REVISAR) ---
+                        // Si tu parte "bonus" maneja la expansión antes de la traducción:
+                        // should_expand(cmd_list_bonus, envlist_bonus);
+            
+                        // Si tu parte "bonus" prepara los heredocs (delimitador, comillas):
+                        // heredoc(cmd_list_bonus);
+
+                        ft_memset(&data_flperez, 0, sizeof(t_data_env_exe));
+                        data_flperez.cmds_head = convert_bonus_cmd_list_to_flperez_cmd_list(cmd_list_bonus);
+                        data_flperez.env = convert_bonus_envlist_to_flperez_envp(envlist_bonus);
+                        data_flperez.last_exit_status = g_get_signal;
+
+                        if (data_flperez.cmds_head)
+                        {
+                             // execute_pipeline internamente llamará a signals_noninteractive()
+                             // y luego a signals_interactive() al finalizar.
+                            execute_pipeline(data_flperez.cmds_head, &data_flperez);
+                            g_get_signal = data_flperez.last_exit_status;
+                        }
+                        
+                        free_flperez_cmd_list(data_flperez.cmds_head);
+                        free_arr2d(data_flperez.env);
+                    }
+                    if (cmd_list_bonus)
+                         cmd_free(&cmd_list_bonus);
+                }
+                if (token_list_bonus)
+                    tok_free(&token_list_bonus);
+            }
+            free(line);
+        }
+        cleaner_envlist(&envlist_bonus);
+    }
+    return (g_get_signal);
 }

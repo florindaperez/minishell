@@ -11,8 +11,9 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
+#include "minishell_executor.h"
 
-static int	count_args(t_arg_info **args)
+static int	count_args(t_arg_info_exe **args)
 {
 	int	count;
 
@@ -28,7 +29,7 @@ static int	count_args(t_arg_info **args)
 static char	**free_argv_on_strdup_error(char **argv, int k)
 {
 	msg_error_cmd("exec", "strdup failed building argv", strerror(errno), 1);
-	g_exit_status = 1;
+	g_get_signal = 1;
 	while (k > 0)
 	{
 		k--;
@@ -47,7 +48,7 @@ static char	**build_empty_argv(void)
 	{
 		msg_error_cmd("exec", "malloc failed for empty argv",
 			strerror(errno), 1);
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (NULL);
 	}
 	argv[0] = NULL;
@@ -58,7 +59,7 @@ static char	**build_empty_argv(void)
  * Rellena el array argv con cadenas duplicadas de args_info.
  * Retorna true si tiene éxito, false si falla un strdup (y libera argv).
  */
-static bool	populate_argv_array(char **argv, t_arg_info **args_info, int argc)
+static bool	populate_argv_array(char **argv, t_arg_info_exe **args_info, int argc)
 {
 	int	i;
 
@@ -83,9 +84,9 @@ static bool	populate_argv_array(char **argv, t_arg_info **args_info, int argc)
 /*
  * Construye un array argv (char**) a partir de la estructura t_arg_info**.
  * Duplica las cadenas usando ft_strdup.
- * El array devuelto debe ser liberado con free_str_tab.
+ * El array devuelto debe ser liberado con str_free_and_null.
  */
-char	**build_argv_from_args(t_arg_info **args)
+char	**build_argv_from_args(t_arg_info_exe **args)
 {
 	int		argc;
 	char	**argv;
@@ -98,7 +99,7 @@ char	**build_argv_from_args(t_arg_info **args)
 	{
 		msg_error_cmd("exec", "malloc failed for argv array",
 			strerror(errno), 1);
-		g_exit_status = 1;
+		g_get_signal = 1;
 		return (NULL);
 	}
 	if (!populate_argv_array(argv, args, argc))

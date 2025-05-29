@@ -10,13 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "minishell.h"         // Primero, para definir t_cmd, t_env, etc.
+#include "minishell_executor.h" // Luego, para usar t_cmd en sus prototipos y definir t_cmd_exe, etc.
 
 /*
  * Realiza fork. Si p_state->is_next_command es true, crea un pipe en
  * p_state->current_pipe_fds. Maneja errores. Retorna el PID.
  */
-static pid_t	do_fork_and_pipe(t_pipeline_state *p_state)
+static pid_t	do_fork_and_pipe(t_pipeline_state_exe *p_state)
 {
 	pid_t	pid;
 
@@ -45,8 +46,8 @@ static pid_t	do_fork_and_pipe(t_pipeline_state *p_state)
 /*
  * Lógica ejecutada por el proceso hijo. Configura FDs y ejecuta el comando.
  */
-static void	child_exec_logic(t_cmd *cmd, t_data_env *data,
-							t_pipeline_state *p_state)
+static void	child_exec_logic(t_cmd_exe *cmd, t_data_env_exe *data,
+							t_pipeline_state_exe *p_state)
 {
 	int	out_fd_for_child;
 
@@ -65,8 +66,8 @@ static void	child_exec_logic(t_cmd *cmd, t_data_env *data,
  * Procesa un único comando en la pipeline: forkea y organiza la ejecución.
  * Retorna el PID del hijo. Utiliza t_pipeline_state.
  */
-static pid_t	process_one_cmd(t_cmd *cmd, t_data_env *data,
-								t_pipeline_state *p_state)
+static pid_t	process_one_cmd(t_cmd_exe *cmd, t_data_env_exe *data,
+								t_pipeline_state_exe *p_state)
 {
 	pid_t	pid;
 
@@ -83,10 +84,10 @@ static pid_t	process_one_cmd(t_cmd *cmd, t_data_env *data,
  * Itera sobre los comandos, ejecutando cada uno en la pipeline.
  * Retorna el PID del último comando. Utiliza t_pipeline_state.
  */
-static pid_t	exec_cmd_loop(t_cmd *cmds, t_data_env *data,
-								t_pipeline_state *p_state_base)
+static pid_t	exec_cmd_loop(t_cmd_exe *cmds, t_data_env_exe *data,
+								t_pipeline_state_exe *p_state_base)
 {
-	t_cmd	*current_cmd;
+	t_cmd_exe	*current_cmd;
 	pid_t	pid;
 	pid_t	last_pid;
 
@@ -105,10 +106,10 @@ static pid_t	exec_cmd_loop(t_cmd *cmds, t_data_env *data,
 /*
  * Función principal para ejecutar una lista de comandos (pipeline).
  */
-void	execute_pipeline(t_cmd *cmds, t_data_env *data)
+void	execute_pipeline(t_cmd_exe *cmds, t_data_env_exe *data)
 {
 	pid_t				last_pid_in_pipeline;
-	t_pipeline_state	p_state;
+	t_pipeline_state_exe	p_state;
 	int					initial_prev_pipe_fd;
 
 	initial_prev_pipe_fd = -1;
@@ -122,12 +123,12 @@ void	execute_pipeline(t_cmd *cmds, t_data_env *data)
 	last_pid_in_pipeline = exec_cmd_loop(cmds, data, &p_state);
 	safe_close(p_state.prev_pipe_read_fd_ptr);
 	if (last_pid_in_pipeline != -1)
-		g_exit_status = wait_for_all_children(last_pid_in_pipeline);
+		g_get_signal = wait_for_all_children(last_pid_in_pipeline);
 	else
 	{
 		if (cmds && !cmds->next && cmds->redir_error
 			&& !is_parent_builtin(cmds))
-			g_exit_status = 1;
+			g_get_signal = 1;
 	}
 	signals_interactive();
 }
