@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
-# include "minishell_executor.h"
+#include "minishell_executor.h"
 
 /*
  * ft_io.c:
@@ -57,7 +57,7 @@ void	init_io_fds(t_cmd_io_exe *io)
 bool	redirect_io(t_cmd_exe *cmd)
 {
 	t_cmd_io_exe	*io;
-	char		*cmd_name_for_error;
+	char			*cmd_name_for_error;
 
 	if (!cmd || !cmd->io)
 		return (false);

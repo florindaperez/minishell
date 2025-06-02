@@ -59,7 +59,8 @@ static char	**build_empty_argv(void)
  * Rellena el array argv con cadenas duplicadas de args_info.
  * Retorna true si tiene éxito, false si falla un strdup (y libera argv).
  */
-static bool	populate_argv_array(char **argv, t_arg_info_exe **args_info, int argc)
+static bool	populate_argv_array(char **argv, t_arg_info_exe **args_info,
+								int argc)
 {
 	int	i;
 

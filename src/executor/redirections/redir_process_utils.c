@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
-# include "minishell_executor.h"
+#include "minishell_executor.h"
 /*
  * Restaura STDIN_FILENO y/o STDOUT_FILENO desde sus copias de seguridad
  * si existen, según el modo especificado.
@@ -73,6 +73,3 @@ bool	open_and_dup_infile(t_cmd_io_exe *io, char *cmd_name_for_err)
 	}
 	return (true);
 }
-
-/* Aquí también iría la función redir_restore_fds_on_fail si la moviste antes */
-/* void redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode mode) { ... } */

@@ -10,6 +10,18 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+/* ************************************************************************** */
+/* */
+/* :::      ::::::::   */
+/* exec_child_utils.c                                 :+:      :+:    :+:   */
+/* +:+ +:+         +:+     */
+/* By: flperez- <marvin@42.fr>                    +#+  +:+       +#+        */
+/*<y_bin_566>   +#+           */
+/* Created: 2025/05/11 16:49:38 by flperez-          #+#    #+#             */
+/* Updated: 2025/05/11 16:49:41 by flperez-         ###   ########.fr       */
+/* */
+/* ************************************************************************** */
+
 #include "minishell.h"
 #include "minishell_executor.h"
 
@@ -17,30 +29,22 @@
  * Maneja casos donde el nombre del comando es una cadena vacía, ya sea
  * literalmente desde el parser o después de la expansión.
  * Esta función siempre termina el proceso hijo con el código de salida 127.
- */
-void    child_handle_empty_or_not_found(t_cmd_exe *cmd, char **argv)
+*/
+void	child_handle_empty_or_not_found(t_cmd_exe *cmd, char **argv)
 {
-    // La condición que llama a esta función desde execute_prepared_command es:
-    // (cmd->was_literal_empty_command || (argv[0] && argv[0][0] == '\0'))
-    // Ambas situaciones deben resultar en "command not found" y salida 127.
-    // argv[0] será una cadena vacía "" si se entró por la segunda parte de la OR.
-
-    (void)cmd; // cmd podría no ser necesario si solo nos basamos en argv[0]
-               // o si was_literal_empty_command ya no se usa para diferenciar el mensaje/código.
-
-    msg_error_cmd(argv[0], NULL, "command not found", 127);
-    // msg_error_cmd ya llama a set_exit_status(127), así que g_get_signal se actualiza.
-    free_str_tab(argv);
-    exit(127); // Salir con el código de error.
+	(void)cmd;
+	msg_error_cmd(argv[0], NULL, "command not found", 127);
+	free_str_tab(argv);
+	exit(127);
 }
 
 /*
  * Valida un path (existencia, si es directorio, permisos de ejecución).
  * Muestra mensajes de error apropiados.
  * Retorna 0 si el path es válido y ejecutable, o un código de error (126 o 127).
- */
+*/
 int	get_path_execution_errors(const char *exec_path, \
-										const char *cmd_name_for_err)
+									const char *cmd_name_for_err)
 {
 	struct stat	path_stat;
 

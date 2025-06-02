@@ -22,9 +22,9 @@ int	g_get_signal = 0;
 
 // --- Declaraciones adelantadas de funciones estáticas auxiliares ---
 static t_cmd	*helper_tokenize_parse_expand(char *line, t_env *env_list_head);
-static void		helper_execute_pipeline_logic(t_cmd *bonus_cmd_list, \
-											t_env **envlist_bonus_ptr, \
-											t_data_env_exe *data_flperez);
+static void		helper_execute_pipeline_logic(t_cmd *cmd_list, \
+											t_env **envlist_ptr, \
+											t_data_env_exe *data);
 // NOTA: process_command_line, run_non_interactive_mode, run_interactive_mode
 // ya están declaradas en tu archivo original.
 
@@ -35,118 +35,118 @@ static void		helper_execute_pipeline_logic(t_cmd *bonus_cmd_list, \
 * Libera la lista de tokens internamente después de parsear.
 *
 * line: La línea de comando en bruto.
-* env_list_head: Puntero a la cabeza de la lista de entorno (t_env *) de bonus,
+* env_list_head: Puntero a la cabeza de la lista de entorno (t_env *) de parseo,
 * necesario para la expansión.
 *
-* Retorna: La cabeza de la lista de comandos (t_cmd *) de bonus procesada,
+* Retorna: La cabeza de la lista de comandos (t_cmd *) de parseo procesada,
 * o NULL si hay un error o no hay comandos.
 */
 // Esta es la versión que proporcionaste en el paso 31, que ya incluye la lógica
-// para manejar token_list_bonus == NULL cuando line no es NULL.
+// para manejar token_list == NULL cuando line no es NULL.
 static t_cmd	*helper_tokenize_parse_expand(char *line, t_env *env_list_head)
 {
-	t_tok	*token_list_bonus;
-	t_cmd	*cmd_list_bonus;
+	t_tok	*token_list;
+	t_cmd	*cmd_list;
 
-	token_list_bonus = NULL;
-	cmd_list_bonus = NULL;
-	tokenizer(&token_list_bonus, line);
-	if (token_list_bonus == NULL && line != NULL)
+	token_list = NULL;
+	cmd_list = NULL;
+	tokenizer(&token_list, line);
+	if (token_list == NULL && line != NULL)
 	{
 		msg_error_cmd("", NULL, "command not found", 127);
 		return (NULL);
 	}
-	if (token_list_bonus == NULL) // Si line era NULL o tokenizer falló de otra forma
+	if (token_list == NULL) // Si line era NULL o tokenizer falló de otra forma
 		return (NULL);
-	if (parser(&cmd_list_bonus, token_list_bonus) == 1)
+	if (parser(&cmd_list, token_list) == 1)
 	{
-		if (cmd_list_bonus)
-			cmd_free(&cmd_list_bonus);
-		tok_free(&token_list_bonus);
+		if (cmd_list)
+			cmd_free(&cmd_list);
+		tok_free(&token_list);
 		return (NULL);
 	}
-	tok_free(&token_list_bonus);
-	if (cmd_list_bonus == NULL)
+	tok_free(&token_list);
+	if (cmd_list == NULL)
 		return (NULL);
-	should_expand(cmd_list_bonus, env_list_head);
-	if (heredoc(cmd_list_bonus) != 0) // Asumiendo que heredoc establece g_get_signal si falla
+	should_expand(cmd_list, env_list_head);
+	if (heredoc(cmd_list) != 0) // Asumiendo que heredoc establece g_get_signal si falla
 	{
-		cmd_free(&cmd_list_bonus);
+		cmd_free(&cmd_list);
 		return (NULL);
 	}
-	return (cmd_list_bonus);
+	return (cmd_list);
 }
 
 /*
-* static void   helper_execute_pipeline_logic(t_cmd *bonus_cmd_list, ...)
+* static void   helper_execute_pipeline_logic(t_cmd *cmd_list, ...)
 * --------------------------------------------------------------------------
 * (Sin cambios respecto a tu versión del paso 31)
 */
-static void	helper_execute_pipeline_logic(t_cmd *bonus_cmd_list, \
-											t_env **envlist_bonus_ptr, \
-											t_data_env_exe *data_flperez)
+static void	helper_execute_pipeline_logic(t_cmd *cmd_list, \
+											t_env **envlist_ptr, \
+											t_data_env_exe *data)
 {
-	ft_memset(data_flperez, 0, sizeof(t_data_env_exe));
-	data_flperez->shell_env_list_ptr = envlist_bonus_ptr;
-	data_flperez->last_exit_status = g_get_signal;
-	data_flperez->cmds_head = \
-		convert_cmd_list_to_cms_list_exec(bonus_cmd_list);
-	if (data_flperez->shell_env_list_ptr && \
-		*(data_flperez->shell_env_list_ptr))
-		data_flperez->env_for_execve = \
-		convert_envlist_to_envp_exe(*(data_flperez->shell_env_list_ptr));
+	ft_memset(data, 0, sizeof(t_data_env_exe));
+	data->shell_env_list_ptr = envlist_ptr;
+	data->last_exit_status = g_get_signal;
+	data->cmds_head = \
+		convert_cmd_list_to_cms_list_exec(cmd_list);
+	if (data->shell_env_list_ptr && \
+		*(data->shell_env_list_ptr))
+		data->env_for_execve = \
+		convert_env_list_to_exec_envp(*(data->shell_env_list_ptr));
 	else
-		data_flperez->env_for_execve = NULL;
-	if (data_flperez->cmds_head == NULL && bonus_cmd_list != NULL)
+		data->env_for_execve = NULL;
+	if (data->cmds_head == NULL && cmd_list != NULL)
 		write(2, "minishell: Error during command translation\n", 44);
-	else if (!data_flperez->env_for_execve && \
-		data_flperez->shell_env_list_ptr && \
-		*(data_flperez->shell_env_list_ptr) && data_flperez->cmds_head)
+	else if (!data->env_for_execve && \
+		data->shell_env_list_ptr && \
+		*(data->shell_env_list_ptr) && data->cmds_head)
 		write(2, "minishell: Error converting environment\n", 40);
-	else if (data_flperez->cmds_head)
+	else if (data->cmds_head)
 	{
-		execute_pipeline(data_flperez->cmds_head, data_flperez);
-		g_get_signal = data_flperez->last_exit_status;
+		execute_pipeline(data->cmds_head, data);
+		g_get_signal = data->last_exit_status;
 	}
-	free_flperez_cmd_list(data_flperez->cmds_head);
-	data_flperez->cmds_head = NULL;
-	free_arr2d(data_flperez->env_for_execve);
-	data_flperez->env_for_execve = NULL;
+	free_cmd_list(data->cmds_head);
+	data->cmds_head = NULL;
+	free_arr2d(data->env_for_execve);
+	data->env_for_execve = NULL;
 }
 
 /*
-* static void   process_command_line(char *line, t_env **envlist_bonus_ptr)
+* static void   process_command_line(char *line, t_env **envlist_ptr)
 * --------------------------------------------------------------------------
 * (Ajuste menor: si helper_tokenize_parse_expand devuelve NULL porque ya
 * manejó un error como 'comando vacío', g_get_signal ya está establecido)
 */
-static void	process_command_line(char *line, t_env **envlist_bonus_ptr)
+static void	process_command_line(char *line, t_env **envlist_ptr)
 {
-	t_cmd			*bonus_cmd_list;
-	t_data_env_exe	data_flperez;
+	t_cmd			*cmd_list;
+	t_data_env_exe	data;
 
-	bonus_cmd_list = NULL;
-	if (!line || !envlist_bonus_ptr) // line puede ser "", !line es falso.
+	cmd_list = NULL;
+	if (!line || !envlist_ptr) // line puede ser "", !line es falso.
 		return ;
-	bonus_cmd_list = helper_tokenize_parse_expand(line, *envlist_bonus_ptr);
-	if (bonus_cmd_list == NULL)
+	cmd_list = helper_tokenize_parse_expand(line, *envlist_ptr);
+	if (cmd_list == NULL)
 	{
-		// Si bonus_cmd_list es NULL, helper_tokenize_parse_expand ya manejó
+		// Si cmd_list es NULL, helper_tokenize_parse_expand ya manejó
 		// el error (ej. "" o error de parser) y estableció g_get_signal.
 		return ;
 	}
-	helper_execute_pipeline_logic(bonus_cmd_list, envlist_bonus_ptr, \
-									&data_flperez);
-	if (bonus_cmd_list) // Debería ser siempre verdad si no se retornó antes
-		cmd_free(&bonus_cmd_list);
+	helper_execute_pipeline_logic(cmd_list, envlist_ptr, \
+									&data);
+	if (cmd_list) // Debería ser siempre verdad si no se retornó antes
+		cmd_free(&cmd_list);
 }
 
 /*
-* static void   run_non_interactive_mode(char *av[], t_env **envlist_bonus)
+* static void   run_non_interactive_mode(char *av[], t_env **envlist)
 * --------------------------------------------------------------------------
 * (Modificado para manejar explícitamente av[2] == "" sin ft_split)
 */
-static void	run_non_interactive_mode(char *av[], t_env **envlist_bonus)
+static void	run_non_interactive_mode(char *av[], t_env **envlist)
 {
 	char	**arg_input_lines;
 	int		i;
@@ -155,7 +155,7 @@ static void	run_non_interactive_mode(char *av[], t_env **envlist_bonus)
 	// se procesa como un único comando vacío.
 	if (av[2][0] == '\0' && ft_strchr(av[2], ';') == NULL)
 	{
-		process_command_line(av[2], envlist_bonus);
+		process_command_line(av[2], envlist);
 		// g_get_signal es establecido por process_command_line
 		// -> helper_tokenize_parse_expand -> msg_error_cmd
 	}
@@ -171,7 +171,7 @@ static void	run_non_interactive_mode(char *av[], t_env **envlist_bonus)
 		i = 0;
 		while (arg_input_lines[i])
 		{
-			process_command_line(arg_input_lines[i], envlist_bonus);
+			process_command_line(arg_input_lines[i], envlist);
 			i++;
 		}
 		free_arr2d(arg_input_lines);
@@ -179,12 +179,12 @@ static void	run_non_interactive_mode(char *av[], t_env **envlist_bonus)
 }
 
 /*
-* static void   run_interactive_mode(t_env **envlist_bonus)
+* static void   run_interactive_mode(t_env **envlist)
 * -----------------------------------------------------------
 * (Lógica para "solo Enter" ya presente y correcta; el caso de `""` como input
 * con comillas es manejado por el flujo normal que llega a find_command_path)
 */
-static void	run_interactive_mode(t_env **envlist_bonus)
+static void	run_interactive_mode(t_env **envlist)
 {
 	char	*line;
 
@@ -206,7 +206,7 @@ static void	run_interactive_mode(t_env **envlist_bonus)
 		if (*line) // Si la línea no está vacía (ej. NO es solo Enter)
 		{
 			add_history(line);
-			process_command_line(line, envlist_bonus);
+			process_command_line(line, envlist);
 		}
 		// Si *line era '\0' (solo Enter), no se hace nada,
 		// g_get_signal no cambia, se muestra nuevo prompt. Correcto.
@@ -224,14 +224,14 @@ static void	run_interactive_mode(t_env **envlist_bonus)
 */
 int	main(int ac, char *av[], char *envp[])
 {
-	t_env	*envlist_bonus;
+	t_env	*envlist;
 
-	envlist_bonus = NULL;
+	envlist = NULL;
 	signals_interactive(); // Configurar señales iniciales
-	env_init_list(envp, &envlist_bonus);
+	env_init_list(envp, &envlist);
 	if (ac == 3 && ft_strcmp(av[1], "-c") == 0 && av[2] != NULL) // CAMBIO: Permitir av[2] == ""
 	{
-		run_non_interactive_mode(av, &envlist_bonus);
+		run_non_interactive_mode(av, &envlist);
 	}
 	else if (ac != 1) // Error si hay argumentos pero no son -c "algo"
 	{
@@ -243,9 +243,9 @@ int	main(int ac, char *av[], char *envp[])
 	else // Modo interactivo
 	{
 		// init_msg(); // Si tienes un mensaje de bienvenida
-		run_interactive_mode(&envlist_bonus);
+		run_interactive_mode(&envlist);
 	}
-	cleaner_envlist(&envlist_bonus); // Limpiar al final
+	cleaner_envlist(&envlist); // Limpiar al final
 	return (g_get_signal); // Devolver el último estado de salida
 }
 

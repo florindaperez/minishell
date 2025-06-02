@@ -68,7 +68,7 @@ static bool	local_update_internal_caches(t_data_env_exe *data, \
 /*
 * bool	update_all_pwd_vars(...)
 * Orquesta la actualización de todas las variables PWD/OLDPWD.
-* Asume que add_or_update_env_list_var y convert_envlist_to_envp_exe
+* Asume que add_or_update_env_list_var y convert_env_list_to_exec_envp
 * están correctamente definidas y gestionan errores de memoria.
 */
 bool	update_all_pwd_vars(t_data_env_exe *data, char *new_dir_path)
@@ -85,7 +85,7 @@ bool	update_all_pwd_vars(t_data_env_exe *data, char *new_dir_path)
 	if (*(data->shell_env_list_ptr))
 	{
 		data->env_for_execve = \
-			convert_envlist_to_envp_exe(*(data->shell_env_list_ptr));
+			convert_env_list_to_exec_envp(*(data->shell_env_list_ptr));
 		if (!data->env_for_execve && *(data->shell_env_list_ptr))
 		{
 			msg_error_cmd("cd", "(internal)", "env array update failed", 1);

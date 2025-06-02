@@ -117,7 +117,7 @@ static bool	regenerate_exec_env_if_needed(t_data_env_exe *data, \
 	{
 		free_arr2d(data->env_for_execve);
 		data->env_for_execve = \
-			convert_envlist_to_envp_exe(*(data->shell_env_list_ptr));
+			convert_env_list_to_exec_envp(*(data->shell_env_list_ptr));
 		if (!data->env_for_execve)
 		{
 			msg_error_cmd("unset", "(internal)", \

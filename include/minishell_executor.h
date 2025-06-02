@@ -112,14 +112,15 @@ typedef enum e_restore_mode_exe
 ** >> PROTOTIPOS DE LA CAPA DE TRADUCCIÓN (parser_to_exec_bridge.c) <<
 ** ========================================================================== **
 */
-t_cmd_exe					*convert_cmd_list_to_cms_list_exec(\
-								struct s_cmd *b_cmd_list_head);
-char						**convert_envlist_to_envp_exe(\
-								t_env *b_env_list); /* Renombrado */
-void						free_flperez_cmd_list(t_cmd_exe *flp_cmd_list_head);
-void						free_flperez_arg_info_array(\
-								t_arg_info_exe **flp_args);
-void						free_data_env_exe(t_data_env_exe *data);
+t_arg_info_exe	**translate_parser_args_to_exec_args(char **parser_commands);
+
+t_cmd_exe	*convert_cmd_list_to_cms_list_exec(struct s_cmd *b_cmd_list_head);
+char	*assemble_env_string(t_env *env_node);
+char	**convert_env_list_to_exec_envp(struct s_env *env_list);
+void free_arg_info_array(t_arg_info_exe **flp_args);
+void free_cmd_list(t_cmd_exe *flp_cmd_list_head);
+void free_data_env_exe (t_data_env_exe *data);
+int	populate_exec_io_from_redirections(t_cmd_io_exe *exec_io, t_redir *redir_list);
 
 /*
 ** ========================================================================== **
@@ -148,6 +149,10 @@ bool						handle_pipeline_preliminaries(t_cmd_exe *cmds, \
 int							wait_for_all_children(pid_t last_pid);
 
 char						*ft_strjoin_path(char const *s1, char const *s2);
+bool	validate_basic_cmd_input(t_cmd_exe *cmd, char **cmd_name_out);
+void	handle_path_search_error(t_path_status status, \
+									const char *cmd_name, \
+									t_data_env_exe *data);
 
 
 /* --- Redirecciones --- */

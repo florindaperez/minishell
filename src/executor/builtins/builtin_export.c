@@ -90,7 +90,7 @@ static bool	regenerate_exec_env_after_export(t_data_env_exe *data, \
 								*(data->shell_env_list_ptr));
 		if (source_list_existed)
 			data->env_for_execve = \
-				convert_envlist_to_envp_exe(*(data->shell_env_list_ptr));
+				convert_env_list_to_exec_envp(*(data->shell_env_list_ptr));
 		conversion_failed = (!data->env_for_execve);
 		if (conversion_failed && source_list_existed)
 		{

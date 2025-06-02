@@ -136,7 +136,7 @@ typedef struct s_redir
 	t_redir_type	redir_type;
 	struct s_redir	*next;
 	bool            original_delimiter_had_quotes; // NUEVO CAMPO SUGERIDO para HEREDOC
-                                                  // Necesario para flperez_core->io->heredoc_quotes
+                                                  // Necesario para executor->io->heredoc_quotes
                                                   // Campo para almacenar si el delimitador original tenía comillas
 }					t_redir;
 
@@ -168,7 +168,7 @@ typedef struct s_xpdr
 
 /*--------------------------- minishell.c (Lógica principal de tu shell) -------*/
 // (Estos prototipos se mantienen, asumiendo que minishell() llamará
-//  a la secuencia: tokenizer -> parser -> capa_traduccion -> executor_flperez)
+//  a la secuencia: tokenizer -> parser -> capa_traduccion -> executor)
 
 /*--------------------------- minishell.c ------------------------*/
 int		set_signals(int mode);
@@ -295,11 +295,11 @@ void	print_cmd_para_executor(t_cmd *lst);//ELIMINAR ANTES DE ENTREGA
 int		exist_redirections(t_cmd *cmd);// Puede ser útil para el parser/traductor
 
 
-/*--- Manejo de Errores (Se mantiene, unificar con flperez_core si es posible) ---*/
+/*--- Manejo de Errores (Se mantiene, unificar con executor si es posible) ---*/
 int     msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
 
 /*-------------------heredoc-------------------*/
-int		heredoc_create(t_redir *redir, int hd_nbr);
+//int		heredoc_create(t_redir *redir, int hd_nbr); ha pasado a estatica
 int		heredoc(t_cmd *cmd);
 
 #endif

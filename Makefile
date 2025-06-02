@@ -145,37 +145,38 @@ FILES = \
     translate/parser_to_exec_convert.c \
     translate/parser_to_exec_free.c \
     translate/parser_to_exec_redir.c \
+	translate/parser_to_exec_env.c \
     \
-    flperez_core/execute/exec_child.c \
-    flperez_core/execute/exec_child_utils.c \
-    flperez_core/execute/exec_pipeline.c \
-    flperez_core/execute/exec_pipeline_utils.c \
-    flperez_core/execute/exec_redirects.c \
-    flperez_core/execute/exec_utils.c \
-    flperez_core/execute/find_path.c \
-	flperez_core/execute/find_path_utils.c \
-    flperez_core/execute/heredoc.c \
+    executor/execute/exec_child.c \
+    executor/execute/exec_child_utils.c \
+    executor/execute/exec_pipeline.c \
+    executor/execute/exec_pipeline_utils.c \
+    executor/execute/exec_redirects.c \
+    executor/execute/exec_utils.c \
+    executor/execute/find_path.c \
+	executor/execute/find_path_utils.c \
+    executor/execute/heredoc.c \
     \
-    flperez_core/redirections/ft_io.c \
-    flperez_core/redirections/redir_process.c \
-    flperez_core/redirections/redir_process_utils.c \
-    flperez_core/redirections/redir_utils.c\
+    executor/redirections/ft_io.c \
+    executor/redirections/redir_process.c \
+    executor/redirections/redir_process_utils.c \
+    executor/redirections/redir_utils.c\
 	\
-	flperez_core/builtins/builtin_cd.c \
-    flperez_core/builtins/builtin_cd_utils.c \
-	flperez_core/builtins/builtin_cd_update_env.c \
-	flperez_core/builtins/builtin_cd_path_utils.c \
-    flperez_core/builtins/builtin_echo.c \
-    flperez_core/builtins/builtin_env.c \
-    flperez_core/builtins/builtin_exit.c \
-	flperez_core/builtins/builtin_exit_utils.c \
-    flperez_core/builtins/builtin_export.c \
-	flperez_core/builtins/builtin_export_utils.c \
-    flperez_core/builtins/builtin_pwd.c \
-    flperez_core/builtins/builtin_unset.c \
-    flperez_core/builtins/builtin_utils.c \
-	flperez_core/builtins/env_management_utils.c \
-	flperez_core/builtins/exec_builtins.c \
+	executor/builtins/builtin_cd.c \
+    executor/builtins/builtin_cd_utils.c \
+	executor/builtins/builtin_cd_update_env.c \
+	executor/builtins/builtin_cd_path_utils.c \
+    executor/builtins/builtin_echo.c \
+    executor/builtins/builtin_env.c \
+    executor/builtins/builtin_exit.c \
+	executor/builtins/builtin_exit_utils.c \
+    executor/builtins/builtin_export.c \
+	executor/builtins/builtin_export_utils.c \
+    executor/builtins/builtin_pwd.c \
+    executor/builtins/builtin_unset.c \
+    executor/builtins/builtin_utils.c \
+	executor/builtins/env_management_utils.c \
+	executor/builtins/exec_builtins.c \
 
 
 
