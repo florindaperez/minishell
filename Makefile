@@ -64,18 +64,6 @@ FILES = \
     arr2d/rm_one_arr2d.c \
     arr2d/size_arr2d.c \
     \
-    builtins/builtin_cd.c \
-    builtins/cd_utils.c \
-    builtins/builtin_echo.c \
-    builtins/builtin_env.c \
-    builtins/builtin_exit.c \
-    builtins/exit_utils.c \
-    builtins/builtin_export.c \
-    builtins/builtin_pwd.c \
-    builtins/builtin_unset.c \
-    builtins/builtins.c \
-    builtins/var_exists.c \
-    \
     cmd/cmd_add_back.c \
     cmd/cmd_free.c \
     cmd/cmd_last.c \
@@ -151,6 +139,7 @@ FILES = \
     utils/wellcome_msg.c \
     utils/message_error.c \
 	utils/utils.c \
+	utils/array_utils.c \
     \
     translate/parser_to_exec_args.c \
     translate/parser_to_exec_convert.c \
@@ -164,12 +153,32 @@ FILES = \
     flperez_core/execute/exec_redirects.c \
     flperez_core/execute/exec_utils.c \
     flperez_core/execute/find_path.c \
+	flperez_core/execute/find_path_utils.c \
     flperez_core/execute/heredoc.c \
     \
     flperez_core/redirections/ft_io.c \
     flperez_core/redirections/redir_process.c \
     flperez_core/redirections/redir_process_utils.c \
-    flperez_core/redirections/redir_utils.c
+    flperez_core/redirections/redir_utils.c\
+	\
+	flperez_core/builtins/builtin_cd.c \
+    flperez_core/builtins/builtin_cd_utils.c \
+	flperez_core/builtins/builtin_cd_update_env.c \
+	flperez_core/builtins/builtin_cd_path_utils.c \
+    flperez_core/builtins/builtin_echo.c \
+    flperez_core/builtins/builtin_env.c \
+    flperez_core/builtins/builtin_exit.c \
+	flperez_core/builtins/builtin_exit_utils.c \
+    flperez_core/builtins/builtin_export.c \
+	flperez_core/builtins/builtin_export_utils.c \
+    flperez_core/builtins/builtin_pwd.c \
+    flperez_core/builtins/builtin_unset.c \
+    flperez_core/builtins/builtin_utils.c \
+	flperez_core/builtins/env_management_utils.c \
+	flperez_core/builtins/exec_builtins.c \
+
+
+
 SRC 	:= $(addprefix $(SRC_ROOT), $(FILES))
 OBJS 	:= $(addprefix $(OBJ_ROOT), $(FILES:.c=.o))
 DEPS 	:= $(addprefix $(DEP_ROOT), $(FILES:.c=.d))

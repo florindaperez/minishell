@@ -33,15 +33,12 @@
 # include <sys/stat.h>
 # include <stdbool.h>
 
-// === INCLUSIÓN DEL NUEVO HEADER CON ESTRUCTURAS Y PROTOTIPOS DE FLPEREZ ===
-//# include "minishell_executor.h" //comentada por  referencia circular 
-
 /*-------- Defines para Rutas --------*/
 // Fallback para PATH_MAX si no está definido por <limits.h>
 #ifndef PATH_MAX
-    #define MINISHELL_PATH_BUF_SIZE 4096 // Un tamaño común y generoso para rutas
+    #define PATH_SIZE 4096 // Un tamaño común y generoso para rutas
 #else
-    #define MINISHELL_PATH_BUF_SIZE PATH_MAX
+    #define PATH_SIZE PATH_MAX
 #endif
 
 /*-----------------Defines-------------*/
@@ -165,22 +162,7 @@ typedef struct s_xpdr
 	char	*val;
 	char	*result;//token final expandido
 }			t_xpdr;
-/*
-------variables para executor-------
-typedef struct s_exe
-{
-	char			**paths;
-	char			*cmd_fullpath;
-	char			**new_array;
-	pid_t			*pid;
-	int				num_cmds;
-	int				fd_input;
-	int				fd_output;
-	int				fd[2];
-	int				dup_stdin;
-	int				dup_stdout;
-}					t_exe;
-*/
+
 
 /* ===== PROTOTIPOS DE FUNCIONES ===== */
 
@@ -188,7 +170,7 @@ typedef struct s_exe
 // (Estos prototipos se mantienen, asumiendo que minishell() llamará
 //  a la secuencia: tokenizer -> parser -> capa_traduccion -> executor_flperez)
 
-/*--------------------------- minishell.c ------ TODAS-------------------*/
+/*--------------------------- minishell.c ------------------------*/
 int		set_signals(int mode);
 void	minishell(t_env	*envlist);//Adaptar para e lnuevo flujp
 void	tokenizer(t_tok **tok, char *line);
@@ -196,17 +178,12 @@ int		parser(t_cmd **cmd, t_tok *tok);
 void	cleaner_envlist(t_env **lst);
 void	control_and_d(char *line);
 
-/*--------------------------- init_exe.c OBSOLETO-------------------------
-//void	init_exe(t_exe *exe, t_cmd *cmd);	reemplazada por t_data_env_exe de flperez
-void	exe_free(t_exe *exe);
-*/
-
-/*--------------------------- wellcome_msg.c -----------TODAS--------------*/
+/*--------------------------- wellcome_msg.c ------------------------*/
 int		bg_color(void);
 void	init_msg(void);
 int		help_mini(void);
 
-/*---------------------------array 2d -------- TODAS-> char ** ----------------*/
+/*---------------------------array 2d ------------------------*/
 size_t	size_arr2d(char **arr2d);
 char	**dup_arr2d(char **arr2d);
 char	**add_one_arr2d(char **arr2d, char *new);
@@ -214,15 +191,14 @@ char	**rm_one_arr2d(char **arr2d, int index);
 void	free_arr2d(char **arr2d);
 void	print_arr2d(char **arr2d);//ELIMINAR ANTES DE ENTREGA
 
-/*-------------------t_env-------- TODAS-> s_env ----------*/
+/*-------------------t_env------------------*/
 t_env	*lstlast(t_env *lst);//Se puede cambiar por ft_lstlast de libft
 void	lstadd_back(t_env **lst, t_env *new);//Se puede cambiar por ft_lstadd_back de libft
 t_env	*lstnew(char *key, char *value);
 void	env_init_list(char **envp, t_env **env);
 void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));//Se puede cambiar por ft_lstdelone de libft
-//void	cleaner_envlist(t_env **lst); repetida en minishell.c
 
-/*--------------------t_tok -------- TODAS-> s_tok ---------*/
+/*--------------------t_tok -----------------*/
 t_tok	*tok_new_node(char *str, int type);
 t_tok	*tok_last(t_tok *lst);
 void	tok_add_back(t_tok **lst, t_tok *new);
@@ -237,7 +213,6 @@ void	cmd_free(t_cmd **lst);// IMPORTANTE para liberar la salida del parser
 int		cmd_size(t_cmd *lst);//ELIMINAR ANTES DE ENTREGA
 
 /*--------------------t_redir-------TODAS-> s_redir -----------*/
-//t_redir	*redir_new_node(char *str, int redir_type);Adaptada
 t_redir *redir_new_node(char *str, int redir_type, bool had_quotes);
 t_redir	*redir_last(t_redir *lst);
 void	redir_add_back(t_redir **lst, t_redir *new);
@@ -252,7 +227,7 @@ void	init_word_str(size_t len, t_tok *new_tok, char *line, size_t i);
 /*---------------------parser-------TODAS ES EL NUCLEO ------------*/
 int		is_operator(t_tok *node);
 int		is_redirection(t_tok *node);
-void	handle_error(char *str, t_tok **tok);// del parser
+void	handle_error(char *syntax_error_message);// del parser
 size_t	commands_counter(t_tok *tok);
 int		syntax_check_1(t_tok *tok);
 int		syntax_check_2(t_tok *tok);
@@ -260,8 +235,6 @@ void	commands_creator(t_tok *tok, t_cmd *node);
 void	commands_filler(t_tok **tok, t_cmd *node);
 
 /*------------expander & quote removal----------*/
-/* La expansión de argumentos de comando la hará flperez_core. Evalúa si los necesitas */
-/* para expansiones tempranas en tu parser (ej. nombres de archivo de redirección).   */
 
 void	should_expand(t_cmd *cmd, t_env *envlist);//comprobar si es rendundante
 char	*expander(char *str, t_env *envlist);//comprobar si es redundante
@@ -280,32 +253,7 @@ void	get_dollar_builder(char *str, t_xpdr *xpdr, t_env *envlist);
 void	handle_dollar_question(t_xpdr *xpdr);
 void	handle_dollar_invalid_syntax(char *str, t_xpdr *xpdr);
 
-/*--------------------------utils t_env-------------------*/
-/* las comentadas estan repetidas y ver si se puede usar las de libft */
-
-//t_env	*lstlast(t_env *lst);
-//void	lstadd_back(t_env **lst, t_env *new);
-//t_env	*lstnew(char *key, char *value);
-//void	env_init_list(char **envp, t_env **env);
-//void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));
-//void	cleaner_envlist(t_env **lst);
-//int		no_path_env(t_cmd *cmd, t_exe exe, t_env *env);
-//int		no_path_env(t_cmd *cmd, t_env *env);// t_exe ya no existe
-
-
-/*---------------------------executor.c -------------------------*/
-//char	**get_paths(t_env *env);reemplazada por find_pah
-//int		pre_executor(t_env **env, t_cmd *cmd, t_exe *exe, int size_pipe);
-//int		search_command_path(t_cmd *cmd, t_exe *exe);reemplazado por find_path
-//void	error_exe(int num); no se usara, el manejo de errores se realizara con execute de flperez
-//int		list_to_array(t_env *env, t_exe *exe);USARE EL CONVERSOR para transformar el t_env del antiguo t_exe en t_data_env
-//int		close_fd(t_exe	*exe); El manejo de descriptores lo realizara flperez
-//int		executor(t_cmd *cmd, t_exe	*exe, t_env **env); FUNCIO PRINCIPAL, reempazada por exec_pipeline.c
-
-/*---------------------------redirections.c -------------------------*/
-//int		pre_redirections(t_cmd *cmd, t_exe *exe); reemplaza logica de flperez
-
-/*---------------------------utils0.c --------EL VALOR LO ESTABLECE FLPEREZ-----------------*/
+/*---------------------------utils0.c -------------------------*/
 int		ft_msgs(int n, t_cmd *cmd);
 void	set_exit_status(int n);
 
@@ -314,69 +262,25 @@ int		ca_strchr(const char *s, int c);
 char	*ft_strncpy(char *dest, char *src, unsigned int n);
 void	*p_malloc(size_t size);
 void	str_free_and_null(char **str);
+void	free_str_tab(char **tab);
 void	free_ptr(void *ptr);
-//void	free_data_env(t_data_env *data);
+int		is_builtins(t_cmd *cmd);
+bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
+
+//void	free_data_env(t_data_env_exe  *data);
 char	*ft_strjoin_free(char *s1, char const *s2);
 void	safe_close(int *fd);
 void	perror_exit(const char *context, int g_get_signal);
-
-
+int		ft_isspace(int c);
 void	signals_noninteractive(void);
 void	signals_interactive(void);
-
-
-
-//void	signal_child(int sig);//coordinarla con flperez
-//void	signal_parent(int sig);//Coordinala con flperez-
-
 
 /*-------------------exit_status------Manejamos msg_error y $?------------*/
 int		get_exit_status_len(void);
 char	*get_exit_status_val(void);
-// (Estas funciones de error podrían necesitar ser adaptadas o unificadas con las de flperez)
 void	command_not_found(t_cmd *cmd, const char *prefix, size_t prefix_len);
 void	no_file_or_dir(t_cmd *cmd, const char *prefix, size_t prefix_len);
 
-/*--------------------------- builtins -------------------------*/
-int		builtins(t_cmd *cmd, t_env **env);
-int		builtin_exit(t_cmd *cmd, t_env **envlist);
-int		builtin_pwd(t_env *env);
-int		builtin_cd(t_cmd *cmd, t_env **env_list);
-int     builtin_env(t_cmd *cmd, t_env *env);
-int		builtin_echo(t_cmd *cmd, t_env *env); // Añadido t_env *env
-int		builtin_export(t_cmd *cmd, t_env **env);
-int		builtin_unset(t_cmd *cmd, t_env **env);
-int		is_builtins(t_cmd *cmd);
-int		exist_cwd(void);
-
-/*--------------------------- utils builtins ---------------*/
-
-char	*util_cd_get_env_val(t_env *env_list, const char *var_name);
-void	util_cd_set_env_val(t_env **env_list, const char *var_name,
-	const char *value);
-bool	util_cd_capture_old_work_dir(char *buffer, size_t buf_size,
-	t_env *env_list);
-long long	ft_atoll_for_exit(const char *str, bool *error);
-
-
-
-/*--------------------------- builtin export -------------------------*/
-
-
-int		variable_exists_op3(t_env *env, char *variable);
-t_env	*variable_exists_op4(t_env *env, const char *key);
-t_env	*update_env(t_env *env, char *key, char *val);
-
-
-/*-----------------------oldpwd---------------------*/
-/* 			CODIGO MUERTO 
-
-char	*update_pwd(t_env *env);
-int		set_old_pwd(void);
-int		get_old_pwd(char *current_wd, t_env *env);
-int		go_path(t_cmd *cmd);
-int		update_oldpwd(t_env *env, char *current_wd);
-*/
 /*----------------------prints--------------------*/
 void	print_arr2d(char **arr2d);//ELIMINAR ANTES DE ENTREGA
 void	print_tok(t_tok *lst);//ELIMINAR ANTES DE ENTREGA
@@ -393,20 +297,6 @@ int		exist_redirections(t_cmd *cmd);// Puede ser útil para el parser/traductor
 
 /*--- Manejo de Errores (Se mantiene, unificar con flperez_core si es posible) ---*/
 int     msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
-
-/*-------------------heredoc (ROL CAMBIA SIGNIFICATIVAMENTE) -----------------*/
-// Si flperez_core maneja la creación del archivo temporal del heredoc usando el delimitador:
-// - `heredoc_create` de bonus ya no crearía el archivo para `dup2`.
-//   Su rol se transformaría en:
-//   1. Leer el delimitador.
-//   2. Determinar si el delimitador original tenía comillas (para `heredoc_quotes`).
-//   3. Quizás realizar la entrada del usuario para validación o si hay que hacer algo
-//      con ella ANTES de que flperez la lea (poco probable si flperez la expande).
-// - `heredoc` de bonus, si orquestaba lo anterior para el antiguo executor, también cambia.
-//int     heredoc_create(t_redir *redir_bonus /* que contiene el delimitador */,
-//                        int hd_nbr /*, bool *out_had_quotes - SUGERIDO */);
-//int     heredoc(t_cmd *cmd_bonus); // Probablemente reorganizar esta lógica
-
 
 /*-------------------heredoc-------------------*/
 int		heredoc_create(t_redir *redir, int hd_nbr);

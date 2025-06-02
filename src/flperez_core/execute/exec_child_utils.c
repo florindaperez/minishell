@@ -14,23 +14,24 @@
 #include "minishell_executor.h"
 
 /*
- * Maneja casos de comando vacío literal ("" o '') o expansión a cadena vacía.
- * Esta función siempre termina el proceso hijo con el código de salida 
- * apropiado.
+ * Maneja casos donde el nombre del comando es una cadena vacía, ya sea
+ * literalmente desde el parser o después de la expansión.
+ * Esta función siempre termina el proceso hijo con el código de salida 127.
  */
-void	child_handle_empty_or_not_found(t_cmd_exe *cmd, char **argv)
+void    child_handle_empty_or_not_found(t_cmd_exe *cmd, char **argv)
 {
-	if (cmd->was_literal_empty_command)
-	{
-		msg_error_cmd("", NULL, "command not found", 127);
-		str_free_and_null(argv);
-		exit(127);
-	}
-	else if (argv[0] && argv[0][0] == '\0')
-	{
-		str_free_and_null(argv);
-		exit(EXIT_SUCCESS);
-	}
+    // La condición que llama a esta función desde execute_prepared_command es:
+    // (cmd->was_literal_empty_command || (argv[0] && argv[0][0] == '\0'))
+    // Ambas situaciones deben resultar en "command not found" y salida 127.
+    // argv[0] será una cadena vacía "" si se entró por la segunda parte de la OR.
+
+    (void)cmd; // cmd podría no ser necesario si solo nos basamos en argv[0]
+               // o si was_literal_empty_command ya no se usa para diferenciar el mensaje/código.
+
+    msg_error_cmd(argv[0], NULL, "command not found", 127);
+    // msg_error_cmd ya llama a set_exit_status(127), así que g_get_signal se actualiza.
+    free_str_tab(argv);
+    exit(127); // Salir con el código de error.
 }
 
 /*

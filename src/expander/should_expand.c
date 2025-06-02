@@ -17,9 +17,9 @@ void	should_expand(t_cmd *cmd, t_env *envlist)
 	size_t	i;
 	t_redir	*redir_aux;
 
-	redir_aux = cmd->redir;
 	while (cmd)
 	{
+		redir_aux = cmd->redir;
 		i = 0;
 		while (cmd->commands && cmd->commands[i])
 		{

@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
-# include "minishell_executor.h"
+#include "minishell_executor.h"
 
 /*creates a temp file to store the content of the heredoc until the delimiter
  is encountered.*/
@@ -37,7 +37,7 @@ int	heredoc_create(t_redir *redir, int hd_nbr)
 	redir->fname = ft_strdup(tmp_dir);
 	free(tmp_dir);
 	hd_nbr--;
-	set_signals(PARENT);
+	signals_interactive();
 	return (0);
 }
 

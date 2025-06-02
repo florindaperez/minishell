@@ -84,7 +84,7 @@ static bool	populate_argv_array(char **argv, t_arg_info_exe **args_info, int arg
 /*
  * Construye un array argv (char**) a partir de la estructura t_arg_info**.
  * Duplica las cadenas usando ft_strdup.
- * El array devuelto debe ser liberado con str_free_and_null.
+ * El array devuelto debe ser liberado con free_str_tab.
  */
 char	**build_argv_from_args(t_arg_info_exe **args)
 {

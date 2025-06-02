@@ -10,169 +10,191 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"         // Para t_cmd, t_env, y otras definiciones "bonus"
-#include "minishell_executor.h" // Para t_data_env_exe, y los prototipos de funciones del executor y de la capa de traducción
+#include "minishell.h"
+#include "minishell_executor.h"
+
+// int g_get_signal; // Asegúrate que g_get_signal esté definida (probablemente en main.c)
+// y sea accesible si es necesario aquí, o que el estado se pase de otra forma.
 
 /*
-* Handles Ctrl+D (EOF) signal from readline.
-* Exits the shell cleanly.
+* static void	control_and_d(char *line_input)
+* -------------------------------------------------
+* Maneja la señal Ctrl+D (EOF) proveniente de readline.
+* Si line_input es NULL (lo que readline devuelve para EOF),
+* imprime "exit" (si es un TTY) y termina el shell limpiamente
+* usando el último estado de salida conocido (g_get_signal).
+*
+* line_input: La cadena retornada por readline.
 */
 void	control_and_d(char *line_input)
 {
 	if (!line_input)
 	{
-		// La primera condición !isatty es para cuando la entrada no es
-		// una terminal, ej. `echo "ls" | ./minishell`. En ese caso,
-		// readline devuelve NULL tras procesar la entrada.
-		// El segundo write es para el caso interactivo (Ctrl+D).
 		if (isatty(STDIN_FILENO))
 			write(STDOUT_FILENO, "exit\n", 5);
-		// Aquí podrías querer limpiar envlist antes de salir si es el fin del programa
-		exit(g_get_signal); // Salir con el último estado conocido
-		//exit(EXIT_SUCCESS); // O siempre salir con SUCCESS en Ctrl+D interactivo
+		exit(g_get_signal);
 	}
 }
 
 /*
-* Reads a line of input from the user using readline.
-* Adds valid lines to history.
+* static char	*generate_line(void)
+* --------------------------------------
+* Lee una línea de entrada del usuario utilizando readline, mostrando el prompt.
+* Si la línea es válida (no NULL y no vacía), la añade al historial.
+*
+* Retorna: La línea leída (alocada por readline), o NULL si EOF (Ctrl+D).
 */
 char	*generate_line(void)
 {
 	char	*line;
 
-	line = readline("minishell$ "); // Tu prompt
-	if (line && *line) // Solo añadir a historial si la línea no es NULL y no está vacía
+	line = readline("minishell$ ");
+	if (line && *line)
 		add_history(line);
 	return (line);
 }
 
 /*
-* Prepara los datos para el ejecutor de flperez y lo invoca.
-* Esta función es un candidato a ser dividida para Norminette.
+* static int	prepare_and_execute_flperez(t_cmd *b_cmd_list, \
+* t_env **b_env_list_ptr)
+* -------------------------------------------------------------------------
+* Prepara la estructura de datos para el ejecutor (flperez_core),
+* traduce las estructuras de comando "bonus" a las de "flperez",
+* invoca el pipeline de ejecución y actualiza el estado de salida global.
+* Libera las estructuras de comando traducidas y el array de entorno temporal.
+*
+* b_cmd_list: Cabeza de la lista de comandos "bonus" (t_cmd *) parseados.
+* b_env_list_ptr: Puntero al puntero de la cabeza de la lista de entorno
+* principal "bonus" (t_env **).
+*
+* Retorna: 0 si la preparación y la llamada al ejecutor fueron exitosas
+* (no implica que los comandos ejecutados tuvieran éxito),
+* 1 si hubo un error durante la preparación/traducción.
 */
-static int	prepare_and_execute_flperez(t_cmd *b_cmd_list,
-										t_env *b_env_list)
+static int	prepare_and_execute_flperez(t_cmd *b_cmd_list, \
+										t_env **b_env_list_ptr)
 {
-	t_data_env_exe	data_flp; // Estructura para flperez_core
+	t_data_env_exe	data_flp;
 	int				previous_exit_status;
 
-	previous_exit_status = g_get_signal; // Guardar antes de modificar
+	previous_exit_status = g_get_signal;
 	ft_memset(&data_flp, 0, sizeof(t_data_env_exe));
-	data_flp.cmds_head = convert_bonus_cmd_list_to_flperez_cmd_list(
+	data_flp.shell_env_list_ptr = b_env_list_ptr; /* Conexión al entorno principal */
+	data_flp.cmds_head = convert_cmd_list_to_cms_list_exec(
 			b_cmd_list);
 	if (!data_flp.cmds_head && b_cmd_list)
 	{
-		// ft_putstr_fd("minishell: error during command translation\n", STDERR_FILENO);
-		// La capa de traducción debería manejar la liberación de memoria parcial.
-		// Podrías querer setear g_get_signal a un error específico aquí.
-		return (1); // Indicar fallo en preparación
+		return (1); /* Fallo en traducción de comandos */
 	}
-	data_flp.env = convert_bonus_envlist_to_flperez_envp(b_env_list);
-	if (!data_flp.env && b_env_list)
+	if (data_flp.shell_env_list_ptr && *(data_flp.shell_env_list_ptr))
+		data_flp.env_for_execve = \
+			convert_envlist_to_envp_exe(*(data_flp.shell_env_list_ptr));
+	else
+		data_flp.env_for_execve = NULL;
+	if (!data_flp.env_for_execve && data_flp.shell_env_list_ptr && \
+		*(data_flp.shell_env_list_ptr))
 	{
-		// ft_putstr_fd("minishell: error converting environment\n", STDERR_FILENO);
-		free_flperez_cmd_list(data_flp.cmds_head); // Liberar lo ya traducido
-		return (1); // Indicar fallo
+		free_flperez_cmd_list(data_flp.cmds_head);
+		return (1); /* Fallo en conversión de entorno */
 	}
 	data_flp.last_exit_status = previous_exit_status;
-	if (data_flp.cmds_head) // Solo ejecutar si hay comandos
-		execute_pipeline(data_flp.cmds_head, &data_flp); // LLAMADA A FLPEREZ_CORE
-	g_get_signal = data_flp.last_exit_status; // Actualizar estado global
+	if (data_flp.cmds_head)
+		execute_pipeline(data_flp.cmds_head, &data_flp);
+	g_get_signal = data_flp.last_exit_status;
 	free_flperez_cmd_list(data_flp.cmds_head);
-	if (data_flp.env) // Solo liberar si se alocó
-		free_arr2d(data_flp.env);
-	return (0); // Indicar éxito en preparación y llamada (no necesariamente en ejecución)
+	if (data_flp.env_for_execve)
+		free_arr2d(data_flp.env_for_execve);
+	return (0);
 }
 
 /*
-* Proceso principal para cada línea de comando en modo interactivo.
-* Esta función ha sido refactorizada para el nuevo flujo.
-* Podría necesitar dividirse más para Norminette.
+* static void	main_process_loop_step(t_env **envlist_bonus_ptr)
+* -----------------------------------------------------------------
+* Realiza un ciclo completo de procesamiento para una línea de comando:
+* leer línea, tokenizar, parsear, (expandir/heredoc si es necesario
+* en la capa "bonus"), y luego preparar y ejecutar con "flperez".
+*
+* envlist_bonus_ptr: Puntero al puntero de la cabeza de la lista de entorno
+* principal (t_env **).
 */
-static void	main_process_loop_step(t_env *envlist_bonus)
+static void	main_process_loop_step(t_env **envlist_bonus_ptr)
 {
 	t_tok	*token_list_bonus;
-	t_cmd	*cmd_list_bonus; // Salida de tu parser de bonus
+	t_cmd	*cmd_list_bonus;
 	char	*line_input;
 
 	token_list_bonus = NULL;
 	cmd_list_bonus = NULL;
 	line_input = generate_line();
-	control_and_d(line_input); // Maneja Ctrl+D (EOF), sale si es necesario
-	if (!line_input || !*line_input) // Línea vacía o solo espacios (readline devuelve "")
+	control_and_d(line_input);
+	if (!line_input || !*line_input)
 	{
-		if (line_input) // Si es "" (no NULL), liberar
+		if (line_input)
 			free(line_input);
-		return ; // Volver al prompt
+		return ;
 	}
 	tokenizer(&token_list_bonus, line_input);
-	free(line_input); // La línea ya no es necesaria después de tokenizar
-	if (!token_list_bonus) // Tokenizer no produjo tokens (ej. línea solo de espacios)
+	free(line_input);
+	if (!token_list_bonus)
 		return ;
-	if (parser(&cmd_list_bonus, token_list_bonus) == 1) // Tu parser de bonus
+	if (parser(&cmd_list_bonus, token_list_bonus) == 1)
 	{
-		// El parser de bonus ya maneja errores y libera token_list_bonus.
-		// cmd_list_bonus puede estar parcialmente formado; cmd_free de bonus debe manejarlo.
-		if (cmd_list_bonus)
-			cmd_free(&cmd_list_bonus); // Tu cmd_free para estructuras de bonus
+		if (cmd_list_bonus) /* El parser puede dejarla parcialmente alocada */
+			cmd_free(&cmd_list_bonus);
+		/* tok_free es usualmente responsabilidad del parser si falla */
 		return ;
 	}
-	tok_free(&token_list_bonus); // Si parser tuvo éxito, libera los tokens de bonus
-	if (!cmd_list_bonus) // Si el parser no produjo comandos (caso raro si parser retorna 0)
+	tok_free(&token_list_bonus); /* Si parser OK, tokens de bonus ya no se usan */
+	if (!cmd_list_bonus)
 		return ;
-	// --- Lógica de Expansión y Heredoc (REVISAR PROFUNDAMENTE) ---
-	// 1. Expansión (should_expand):
-	//    La expansión de argumentos ($VAR, etc.) la hará flperez_core.
-	//    Si `should_expand` hacía expansiones tempranas (ej. nombres de archivo
-	//    en redirecciones ANTES de la traducción), esa lógica específica
-	//    debe invocarse aquí o integrarse en el parser.
-	//    Si era solo para argumentos de comando, esta llamada es obsoleta aquí.
-	// should_expand(cmd_list_bonus, envlist_bonus); // COMENTADO PARA REVISIÓN
-
-	// 2. Heredoc (heredoc):
-	//    Si flperez_core crea el archivo temporal del heredoc (Opción 1),
-	//    esta función de bonus ya NO debería crear ese archivo para la ejecución.
-	//    Su rol sería asegurar que t_redir (bonus) tenga el DELIMITADOR
-	//    y el flag `original_delimiter_had_quotes` listos para la capa de traducción.
-	//    Si tu parser ya lo hace (ej. en redir_new_node), esta llamada podría no ser necesaria.
-	//    Si `heredoc(cmd_list_bonus)` realiza este pre-procesamiento del delimitador, se mantiene.
-	//    Si también realiza expansión DENTRO del heredoc, y quieres que flperez lo haga,
-	//    entonces esta parte de `heredoc()` de bonus se vuelve obsoleta.
-	if (heredoc(cmd_list_bonus) != 0) // Asumiendo que heredoc ahora retorna un estado
-	{                                 // y solo pre-procesa para la capa de traducción.
-		cmd_free(&cmd_list_bonus);    // Si falla el pre-procesamiento del heredoc.
+	/* --- Consideraciones para Expansión y Heredoc en "Bonus" --- */
+	/* Si flperez_core hace toda la expansión de $VAR y maneja heredocs, estas */
+	/* llamadas de bonus podrían ser para pre-procesamiento específico. */
+	should_expand(cmd_list_bonus, *envlist_bonus_ptr);
+	if (heredoc(cmd_list_bonus) != 0) /* Asumiendo que heredoc pre-procesa */
+	{
+		cmd_free(&cmd_list_bonus);
 		return ;
 	}
-	prepare_and_execute_flperez(cmd_list_bonus, envlist_bonus);
-	cmd_free(&cmd_list_bonus); // Liberar la estructura de comando original de bonus
+	prepare_and_execute_flperez(cmd_list_bonus, envlist_bonus_ptr);
+	cmd_free(&cmd_list_bonus);
 }
 
 /*
+* void	minishell(t_env *envlist_bonus_main)
+* --------------------------------------------
 * Función principal que maneja el bucle interactivo de minishell.
+* Es llamada desde main() después de la inicialización del entorno.
+*
+* envlist_bonus_main: Puntero a la cabeza de la lista de entorno principal.
+* Nota: Se pasa t_env *, pero las funciones internas
+* a menudo necesitarán t_env ** si la cabeza puede cambiar.
 */
-void	minishell(t_env *envlist_bonus)
+void	minishell(t_env *envlist_bonus_main)
 {
-	// El main ya verifica isatty(STDIN_FILENO) para el modo -c.
-	// Esta función minishell() se llama para el bucle interactivo.
-	// Si se llama, se asume que es un TTY.
-	// La comprobación original de isatty aquí podría ser redundante
-	// si main asegura que solo se llama en modo interactivo.
+	t_env	*current_env_list_head; // Copia local del puntero a la cabeza
 
-	// if (isatty(STDIN_FILENO)) // Esta comprobación estaba en tu minishell()
-	// {
-	while (1) // Bucle infinito para el modo interactivo
+	current_env_list_head = envlist_bonus_main;
+	while (1)
 	{
-		signals_interactive();          // Configura señales para el prompt antes de leer la entrada.
-		main_process_loop_step(envlist_bonus);
-		// El estado de salida g_get_signal ya fue actualizado por prepare_and_execute
+		signals_interactive();
+		main_process_loop_step(&current_env_list_head);
+		/*
+		* Si main_process_loop_step (a través de builtins) modifica la cabeza
+		* de la lista (ej. si la lista estaba vacía y export añade el primer
+		* elemento, o unset elimina el último y la cabeza se vuelve NULL),
+		* current_env_list_head (que es *envlist_bonus_ptr dentro de
+		* main_process_loop_step) se actualizará.
+		* El envlist_bonus_main original en main() también se actualizaría
+		* porque main_process_loop_step recibe &current_env_list_head
+		* (que sería equivalente a recibir &envlist_bonus_main si main
+		* pasara la dirección de su variable local).
+		* El diseño actual de main pasando &envlist_bonus a run_interactive_mode,
+		* y si run_interactive_mode pasa ese mismo &envlist_bonus a esta función
+		* minishell() (renombrando el parámetro), entonces está bien.
+		* La clave es que main_process_loop_step reciba t_env **.
+		*/
 	}
-	// }
-	// else // Este else ya no sería alcanzado si main controla el modo
-	// {
-	//    write(STDERR_FILENO, "minishell: input is not a terminal\n", 36);
-	//    exit(EXIT_FAILURE); // O un código de error específico
-	// }
 }
 /*
 void	control_and_d(char *line)

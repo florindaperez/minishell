@@ -20,7 +20,7 @@ void	redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode_exe mode)
 {
 	if (!io)
 		return ;
-	if (mode == RESTORE_BOTH_EXEC || mode == RESTORE_STDOUT_ONLY_EXEC)
+	if (mode == RESTORE_BOTH || mode == RESTORE_STDOUT_ONLY)
 	{
 		if (io->stdout_backup != -1)
 		{
@@ -29,7 +29,7 @@ void	redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode_exe mode)
 			io->stdout_backup = -1;
 		}
 	}
-	if (mode == RESTORE_BOTH_EXEC || mode == RESTORE_STDIN_ONLY_EXEC)
+	if (mode == RESTORE_BOTH || mode == RESTORE_STDIN_ONLY)
 	{
 		if (io->stdin_backup != -1)
 		{

@@ -22,12 +22,12 @@ int	syntax_check_1(t_tok *tok)
 		return (1);
 	if (tok->type == PIPE || tmp->type == PIPE)
 	{
-		handle_error(PRINT_SYNTAX_ERR_1, &tok);
+		handle_error(PRINT_SYNTAX_ERR_1);
 		return (1);
 	}
 	if (is_operator(tmp))
 	{
-		handle_error(PRINT_SYNTAX_ERR_2, &tok);
+		handle_error(PRINT_SYNTAX_ERR_2);
 		return (1);
 	}
 	return (0);

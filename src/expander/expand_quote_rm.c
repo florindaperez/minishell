@@ -18,7 +18,7 @@ char	*expander(char *str, t_env *envlist)
 	t_xpdr	*xpdr;
 	char	*res;
 
-	xpdr = (t_xpdr *)malloc(sizeof(t_xpdr));
+	xpdr = (t_xpdr *)p_malloc(sizeof(t_xpdr));
 	init_xpdr(xpdr);
 	xpdr->len = new_tok_len(str, xpdr, envlist);
 	xpdr->result = (char *)p_malloc(sizeof(char) * (xpdr->len + 1));

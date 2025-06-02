@@ -12,7 +12,12 @@
 
 #include "minishell.h"
 
-/*Handles what is found after '$' sign*/
+/*
+* Handles what is found after '$' sign
+* Antes se usaba str_free_and _null, pero daba problemas pq se queria 
+* liberar un único char* y poner su puntero (el que lo contenía) a NULL
+* cuando str_free_and_null es para leberar un array d strings.
+*/
 void	get_dollar_builder(char *str, t_xpdr *xpdr, t_env *envlist)
 {
 	if (str[xpdr->i] == '?')

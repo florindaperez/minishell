@@ -12,182 +12,225 @@
 #ifndef MINISHELL_EXECUTOR_H
 # define MINISHELL_EXECUTOR_H
 
-# include <stdbool.h> // Para bool
-# include <stddef.h>  // Para size_t
-# include "libft.h"    // Para t_list (si se usa para la lista de comandos) y otras utilidades
 #include "minishell.h"
 
 /*
 ** ========================================================================== **
-** >> ESTRUCTURAS ADAPTADAS DE MINISHELL_FLPEREZ (CON SUFIJO _EXE) <<
-** Estas son las estructuras que el código del ejecutor de flperez (copiado
-** a tu proyecto) utilizará. Han sido renombradas para evitar conflictos
-** con las estructuras de minishell_bonus.
+** >> ESTRUCTURAS DEL EJECUTOR (ADAPTADAS DE FLPEREZ CON SUFIJO _EXE) <<
 ** ========================================================================== **
 */
 
-/* --- Originalmente de minishell_flperez/inc/minishell_parser.h --- */
-
-// Estado de las comillas (usado en t_arg_info_exe)
+/* Estado de las comillas */
 typedef enum e_quote_type_exec
 {
-    NO_QUOTE_EXEC,
-    SINGLE_QUOTE_EXEC,
-    DOUBLE_QUOTE_EXEC
-}                           t_quote_type_exec;
+	NO_QUOTE_EXEC,
+	SINGLE_QUOTE_EXEC,
+	DOUBLE_QUOTE_EXEC
+}							t_quote_type_exec;
 
-// Información de argumento (usado en t_cmd_exe)
+typedef enum e_path_status
+{
+	PATH_FOUND_EXECUTABLE,      // 0: Ruta válida y ejecutable
+	PATH_ERR_NOT_FOUND,         // 1: No existe (ENOENT de stat)
+	PATH_ERR_IS_DIRECTORY,      // 2: Es un directorio (S_ISDIR)
+	PATH_ERR_NO_PERMISSION,     // 3: Sin permiso (EACCES de access X_OK o stat)
+	PATH_ERR_STAT_FAILED,       // 4: Otro error de stat
+	PATH_ERR_ACCESS_FAILED,     // 5: Otro error de access (no EACCES, raro)
+	PATH_ERR_MALLOC,            // 6: Fallo de memoria (strdup, ft_split, ft_strjoin_path)
+	PATH_NOT_EXPLICIT,          // 7: No era una ruta explícita (para lógica interna)
+	PATH_NOT_IN_ENV,            // 8: No se encontró en PATH (o PATH no existe/vacío)
+	PATH_IS_EMPTY_CMD           // 9: El nombre del comando es una cadena vacía ""
+}	t_path_status;
+
+/* Información de argumento */
 typedef struct s_arg_info_exec
 {
-    char                *value;
-    t_quote_type_exec   q_status;
-}                           t_arg_info_exe;
+	char				*value;
+	t_quote_type_exec	q_status;
+}							t_arg_info_exe;
 
-// Estructura para I/O de un comando (usado en t_cmd_exe)
-// Se declara aquí porque t_cmd_exe la necesita. Su definición completa está más abajo.
-struct s_cmd_io_exe;
+struct						s_cmd_io_exe; /* Declaración adelantada */
 
-// Estructura de comando (adaptada de s_cmd de flperez)
+/* Estructura de comando */
 typedef struct s_cmd_exe
 {
-    char                    *path;      // Path al ejecutable
-    t_arg_info_exe          **args;     // Argumentos del comando
-    struct s_cmd_exe        *next;      // Siguiente comando en un pipeline
-    struct s_cmd_exe        *prev;      // Comando anterior
-    struct s_cmd_io_exe     *io;        // Información de I/O
-    bool                    is_builtin;
-    bool                    redir_error;
-    bool                    was_literal_empty_command;
-    pid_t                   pid;
-}                           t_cmd_exe;
+	char				*path;
+	t_arg_info_exe		**args;
+	struct s_cmd_exe	*next;
+	struct s_cmd_exe	*prev;
+	struct s_cmd_io_exe	*io;
+	bool				is_builtin;
+	bool				redir_error;
+	bool				was_literal_empty_command;
+	pid_t				pid;
+	struct s_cmd		*cmd;
+}							t_cmd_exe;
 
-/* --- Originalmente de minishell_flperez/inc/minishell.h --- */
-
-// Definición completa de la estructura de I/O (adaptada de s_cmd_io de flperez)
+/* Estructura de I/O */
 typedef struct s_cmd_io_exe
 {
-    char    *infile;
-    char    *outfile;
-    char    *heredoc_delimiter;
-    bool    heredoc_quotes;
-    bool    append_mode;
-    int     fd_in;
-    int     fd_out;
-    int     stdin_backup;
-    int     stdout_backup;
-}                               t_cmd_io_exe;
+	char	*infile;
+	char	*outfile;
+	char	*heredoc_delimiter;
+	bool	heredoc_quotes;
+	bool	append_mode;
+	int		fd_in;
+	int		fd_out;
+	int		stdin_backup;
+	int		stdout_backup;
+}								t_cmd_io_exe;
 
-// Estructura de datos global/de entorno (adaptada de s_data_env de flperez)
+/* Estructura de datos del entorno para el ejecutor */
 typedef struct s_data_env_exe
 {
-    char            **env;              // Entorno como array de strings
-    char            *pwd;
-    char            *old_pwd;
-    t_cmd_exe       *cmds_head;         // Cabeza de la lista de t_cmd_exe
-                                        // (flperez usa t_cmd *cmd, asumiendo que es la cabeza)
-                                        // Si flperez usaba t_list de libft, sería: t_list *commands_list;
-    int             last_exit_status;
-}                               t_data_env_exe;
+	char			**env_for_execve;	/* Para execve, generado de t_env* */
+	char			*pwd;				/* Cache del PWD actual */
+	char			*old_pwd;			/* Cache del OLDPWD anterior */
+	t_cmd_exe		*cmds_head;			/* Cabeza de la lista de t_cmd_exe */
+	int				last_exit_status;	/* Último código de salida */
+	t_env			**shell_env_list_ptr; /* Ptr a la lista t_env principal */
+}								t_data_env_exe;
 
-
-// Estado para la gestión interna de pipelines (de minishell.h de flperez)
-// Usada por la lógica de execute_pipeline.c
+/* Estado para pipelines */
 typedef struct s_pipeline_state_exe
 {
-    int     current_pipe_fds[2];        // Descriptores para la tubería actual [READ, WRITE]
-    int     *prev_pipe_read_fd_ptr;     // Puntero al extremo de lectura de la tubería anterior
-                                        // (para encadenar la entrada del comando actual)
-    bool    is_next_command;            // Flag para saber si hay más comandos en el pipeline
-}                               t_pipeline_state_exe;
+	int		current_pipe_fds[2];
+	int		*prev_pipe_read_fd_ptr;
+	bool	is_next_command;
+}								t_pipeline_state_exe;
 
-// Enum para modos de restauración de FDs (de minishell.h de flperez)
-// Usada por la lógica de redirecciones.
+/* Modos de restauración de FDs */
 typedef enum e_restore_mode_exe
 {
-	RESTORE_STDIN_ONLY_EXEC,
-	RESTORE_STDOUT_ONLY_EXEC,
-	RESTORE_BOTH_EXEC
+	RESTORE_STDIN_ONLY,
+	RESTORE_STDOUT_ONLY,
+	RESTORE_BOTH
 }								t_restore_mode_exe;
 
-
+/*
+** ========================================================================== **
+** >> PROTOTIPOS DE LA CAPA DE TRADUCCIÓN (parser_to_exec_bridge.c) <<
+** ========================================================================== **
+*/
+t_cmd_exe					*convert_cmd_list_to_cms_list_exec(\
+								struct s_cmd *b_cmd_list_head);
+char						**convert_envlist_to_envp_exe(\
+								t_env *b_env_list); /* Renombrado */
+void						free_flperez_cmd_list(t_cmd_exe *flp_cmd_list_head);
+void						free_flperez_arg_info_array(\
+								t_arg_info_exe **flp_args);
+void						free_data_env_exe(t_data_env_exe *data);
 
 /*
 ** ========================================================================== **
-** >> PROTOTIPOS DE LA CAPA DE TRADUCCIÓN <<
-** (Implementadas en parser_to_flperez_bridge.c)
-** Toman estructuras de minishell_bonus (prefijo 'b_') y devuelven
-** estructuras compatibles con el ejecutor de flperez (sufijo '_exe').
+** >> PROTOTIPOS DE FUNCIONES PÚBLICAS DEL EJECUTOR <<
 ** ========================================================================== **
 */
+/* --- Procesos y Ejecución --- */
+void						execute_pipeline(t_cmd_exe *cmds, \
+								t_data_env_exe *data);
+bool						find_command_path(t_cmd_exe *cmd, \
+								t_data_env_exe *data);
+char						**build_argv_from_args(t_arg_info_exe **args);
+void						execute_child_process(t_cmd_exe *cmd, \
+								t_data_env_exe *data, int pipe_in_fd, \
+								int pipe_out_fd);
+void						child_handle_empty_or_not_found(t_cmd_exe *cmd, \
+								char **argv);
+int							get_path_execution_errors(const char *exec_path, \
+								const char *cmd_name_for_err);
+void						parent_pipeline_handle_fds(int *pipe_fds, \
+								int *prev_pipe_fd_ptr, pid_t current_pid, \
+								pid_t *last_spawned_pid_ptr);
+int							get_specific_child_exit_status(pid_t child_pid);
+bool						handle_pipeline_preliminaries(t_cmd_exe *cmds, \
+								t_data_env_exe *data);
+int							wait_for_all_children(pid_t last_pid);
 
-/**
- * @brief Convierte la lista de t_cmd (de bonus) a una lista enlazada
- * de t_cmd_exe (para flperez).
- * @param b_cmd_list_head Puntero a la cabeza de la lista s_cmd de bonus.
- * @return Puntero a la cabeza de la lista de t_cmd_exe, o NULL si falla.
- */
-t_cmd_exe   *convert_bonus_cmd_list_to_flperez_cmd_list(
-                struct s_cmd *b_cmd_list_head); // b_cmd_list_head es del tipo t_cmd de bonus
+char						*ft_strjoin_path(char const *s1, char const *s2);
 
-/**
- * @brief Convierte la t_env (lista de bonus) a char **envp.
- * @param b_env_list Puntero a la cabeza de la lista s_env de bonus.
- * @return char** para t_data_env_exe->env, o NULL si falla.
- */
-char        **convert_bonus_envlist_to_flperez_envp(
-                struct s_env *b_env_list); // b_env_list es del tipo t_env de bonus
 
-/**
- * @brief Libera la memoria de una lista de t_cmd_exe y todo su contenido.
- * @param flp_cmd_list_head Cabeza de la lista de t_cmd_exe a liberar.
- */
-void        free_flperez_cmd_list(t_cmd_exe *flp_cmd_list_head);
-// En minishell_executor.h, junto a otros prototipos de la capa de traducción
-void free_flperez_arg_info_array(t_arg_info_exe **flp_args);
-
-/*
-** ========================================================================== **
-** >> PROTOTIPOS DE FUNCIONES PÚBLICAS DEL EJECUTOR DE FLPEREZ <<
-** (Estas funciones son parte del código copiado de flperez y ahora usarán
-** las estructuras con sufijo _exe definidas arriba).
-** ========================================================================== **
-*/
-void	child_handle_empty_or_not_found(t_cmd_exe *cmd, char **argv);
-int		get_path_execution_errors(const char *exec_path, \
-										const char *cmd_name_for_err);
-void	execute_child_process(t_cmd_exe *cmd, t_data_env_exe *data,
+/* --- Redirecciones --- */
+void						init_io_fds(t_cmd_io_exe *io);
+bool						redirect_io(t_cmd_exe *cmd);
+bool						restore_io(t_cmd_io_exe *io);
+void						setup_child_redirections(t_cmd_exe *cmd, \
 								int pipe_in_fd, int pipe_out_fd);
-
-void	parent_pipeline_handle_fds(int *pipe_fds, int *prev_pipe_fd_ptr,
-									pid_t current_pid,
-									pid_t *last_spawned_pid_ptr);
-int		get_specific_child_exit_status(pid_t child_pid);
-bool	handle_pipeline_preliminaries(t_cmd_exe *cmds, t_data_env_exe *data);
-int		wait_for_all_children(pid_t last_pid);
-void 	execute_pipeline(t_cmd_exe *cmds, t_data_env_exe *data);
-void	setup_child_redirections(t_cmd_exe *cmd, int pipe_in_fd,
-									int pipe_out_fd);
-char	**build_argv_from_args(t_arg_info_exe **args);
-bool	find_command_path(t_cmd_exe *cmd, t_data_env_exe *data);
-
-
-int		redir_create_path_if_needed(const char *filepath);
-char	*redir_determine_cmd_name(t_cmd_exe *cmd);
-bool	redir_backup_fds(t_cmd_io_exe *io);
-bool	redir_handle_input(t_cmd_exe *cmd, t_cmd_io_exe *io, char *cmd_name_for_err);
-bool	redir_handle_output(t_cmd_exe *cmd, t_cmd_io_exe *io, char *cmd_name_for_err);
-void	redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode_exe mode);
-bool	open_and_dup_infile(t_cmd_io_exe *io, char *cmd_name_for_err);
-void	init_io_fds(t_cmd_io_exe *io);
-bool	redirect_io(t_cmd_exe *cmd);
-bool	restore_io(t_cmd_io_exe *io);
+bool						open_and_dup_infile(t_cmd_io_exe *io, \
+								char *cmd_name_for_err);
+bool						redir_handle_input(t_cmd_exe *cmd, \
+								t_cmd_io_exe *io, char *cmd_name_for_err);
+bool						redir_handle_output(t_cmd_exe *cmd, \
+								t_cmd_io_exe *io, char *cmd_name_for_err);
+void						redir_restore_fds_on_fail(t_cmd_io_exe *io, \
+								t_restore_mode_exe mode);
+int							redir_create_path_if_needed(const char *filepath);
+char						*redir_determine_cmd_name(t_cmd_exe *cmd);
+bool						redir_backup_fds(t_cmd_io_exe *io);
 
 
+/*
+** ========================================================================== **
+** >> PROTOTIPOS DE BUILTINS Y SUS UTILIDADES <<
+** ========================================================================== **
+*/
 
-/* --- De builtins/exec_builtins.c de flperez --- */
-// Esta función es llamada por el ejecutor de flperez si cmd_node_exe->is_builtin es true.
-// Ya has integrado los builtins, esta es la interfaz que el ejecutor de flperez usará.
-int         execute_builtin(t_cmd_exe *cmd_node_exe, t_data_env_exe *data_exe,
-                    char **expanded_args_exe); // expanded_args_exe serían los cmd_node_exe->args->value ya expandidos si flperez lo hace así
+/* --- Interfaz Principal de Builtins --- */
+int							execute_builtin(t_cmd_exe *cmd_node_exe, \
+								t_data_env_exe *data_exe, \
+								char **expanded_args_exe);
+bool						is_parent_builtin(t_cmd_exe *cmd);
+int							execute_parent_builtin(t_cmd_exe *cmd, \
+								t_data_env_exe *data);
+
+/* --- Implementaciones de Builtins Específicos --- */
+int							builtin_cd(char **args, t_data_env_exe *data);
+int							builtin_echo(char **args);
+int							builtin_env(t_data_env_exe *data, char **args);
+int							builtin_exit(char **args, t_data_env_exe *data);
+int							builtin_export(char **args, t_data_env_exe *data);
+int							builtin_pwd(t_data_env_exe *data);
+int							builtin_unset(char **args, t_data_env_exe *data);
+
+/* --- Utilidades para CD --- */
+/* De builtin_cd_utils.c (o builtin_cd_core.c) */
+bool						perform_directory_change(t_data_env_exe *data, \
+								char *path);
+/* De builtin_cd_path_utils.c */
+char						*get_cd_current_abs_path(t_data_env_exe *data, \
+								char *path_arg);
+/* De builtin_cd_env_update_utils.c o builtin_cd_env.c */
+bool						update_all_pwd_vars(t_data_env_exe *data, \
+								char *new_dir_path);
+
+/* --- Utilidades para EXPORT (y potencialmente UNSET/CD para lista t_env) --- */
+/* De builtin_export_utils.c */
+bool						parse_export_argument_pair(const char *arg, \
+								char **key_out, char **value_out);
+void						print_export_formatted_env(t_env *env_list);
+/* Funciones clave para modificar la lista t_env* (Fuente Única de Verdad) */
+/* Estas podrían estar en env_list_utils.c o similar */
+bool						add_or_update_env_list_var(t_env **list_head_ptr, \
+								const char *key, const char *value);
+/* bool remove_var_from_env_list(t_env **list_head_ptr, const char *key); // Para unset */
+
+
+/* --- Utilidades Generales de Entorno (principalmente para char **env_for_execve) --- */
+/* De env_management_utils.c */
+bool						is_valid_env_var_key(const char *key);
+char						*build_env_entry(char *key, char *value);
+bool						add_env_var(t_data_env_exe *data, char *key, \
+								char *value);
+
+
+int		num_var_env(char **env);
+int		get_env_var_id(char **env, char *key);
+
+/* --- Otras Utilidades --- */
+long long					ft_atoll_with_error_check(const char *str, \
+								bool *error);
+/* Decide cuál es la principal o si ambas son necesarias. */
+ char						*get_env_var_val(char **env, char *var_name);
+
 
 #endif /* MINISHELL_EXECUTOR_H */
