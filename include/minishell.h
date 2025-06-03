@@ -35,11 +35,11 @@
 
 /*-------- Defines para Rutas --------*/
 // Fallback para PATH_MAX si no está definido por <limits.h>
-#ifndef PATH_MAX
-    #define PATH_SIZE 4096 // Un tamaño común y generoso para rutas
-#else
-    #define PATH_SIZE PATH_MAX
-#endif
+# ifndef PATH_MAX
+#  define PATH_SIZE 4096 // Un tamaño común y generoso para rutas
+# else
+#  define PATH_SIZE PATH_MAX
+# endif
 
 /*-----------------Defines-------------*/
 # define EXIT_SUCCESS 0
@@ -60,10 +60,9 @@
 
 /*--------------Signals-------------------*/
 # define CTRL_C SIGINT
-# define CTRL_D SIGQUIT // En muchos sistemas, Ctrl+D es EOF, Ctrl+\ es SIGQUIT
+# define CTRL_D SIGQUIT
 # define CTRL_SLASH SIGQUIT
 # define CTRL_Z SIGTSTP
-
 
 /*--------------------Error messages-------------------*/
 # define PRINT_SYNTAX_ERR_1 "syntax error near unexpected token `|'\n"
@@ -102,21 +101,20 @@ typedef enum e_type
 	D_GREATER
 }	t_type;
 
-// ANADIDO  PARA EL TRADUCTOR 
+// ANADIDO  PARA EL TRADUCTOR
 typedef enum e_quote_state
 {
-    Q_NONE,         // Sin comillas
-    Q_SINGLE,       // Entrecomillado simple: '...'
-    Q_DOUBLE        // Entrecomillado doble: "..."
-} t_quote_state;
-
+	Q_NONE,
+	Q_SINGLE,
+	Q_DOUBLE
+}	t_quote_state;
 
 /*------contiene la str y el tipo de cada token-----*/
 typedef struct s_tok
 {
 	char			*str;//contendrá string solo si es WORD, sino será NULLL.
 	t_type			type;
-	t_quote_state   quote_type; // NUEVO CAMPO! Indica el tipo de comillas originales.
+	t_quote_state	quote_type;//para translate
 	struct s_tok	*next;
 }					t_tok;
 
@@ -132,23 +130,21 @@ typedef enum e_redir_type
 /*----contiene los datos de cada redirección------*/
 typedef struct s_redir
 {
-	char			*fname; // nombre de archivo o DELIMITADOR de heredoc
+	char			*fname;
 	t_redir_type	redir_type;
 	struct s_redir	*next;
-	bool            original_delimiter_had_quotes; // NUEVO CAMPO SUGERIDO para HEREDOC
-                                                  // Necesario para executor->io->heredoc_quotes
-                                                  // Campo para almacenar si el delimitador original tenía comillas
+	bool			original_delimiter_had_quotes;//para executor
 }					t_redir;
 
-/*------contiene los datos de cada pipe de la linea de comando es la salida de parser-*/
+/*--contiene los datos de cada pipe de la linea de comando 
+* salida de parser-*/
 typedef struct s_cmd
 {
-	char			**commands;	// Comando y argumenos
-	t_redir			*redir;		//lista de redirecciones
-	struct s_cmd	*next;		//Siguiente comando en un pipeline
+	char			**commands;
+	t_redir			*redir;
+	struct s_cmd	*next;
 }					t_cmd;
 
-// === PROBABLEMENTE OBSOLETAS O USO REDUCIDO SE COMENTAN, LOGICA DE FLPEREZ ===
 /*---variables para expander---*/
 typedef struct s_xpdr
 {
@@ -163,16 +159,11 @@ typedef struct s_xpdr
 	char	*result;//token final expandido
 }			t_xpdr;
 
-
 /* ===== PROTOTIPOS DE FUNCIONES ===== */
-
-/*--------------------------- minishell.c (Lógica principal de tu shell) -------*/
-// (Estos prototipos se mantienen, asumiendo que minishell() llamará
-//  a la secuencia: tokenizer -> parser -> capa_traduccion -> executor)
 
 /*--------------------------- minishell.c ------------------------*/
 int		set_signals(int mode);
-void	minishell(t_env	*envlist);//Adaptar para e lnuevo flujp
+void	minishell(t_env *envlist);
 void	tokenizer(t_tok **tok, char *line);
 int		parser(t_cmd **cmd, t_tok *tok);
 void	cleaner_envlist(t_env **lst);
@@ -192,11 +183,11 @@ void	free_arr2d(char **arr2d);
 void	print_arr2d(char **arr2d);//ELIMINAR ANTES DE ENTREGA
 
 /*-------------------t_env------------------*/
-t_env	*lstlast(t_env *lst);//Se puede cambiar por ft_lstlast de libft
-void	lstadd_back(t_env **lst, t_env *new);//Se puede cambiar por ft_lstadd_back de libft
+t_env	*lstlast(t_env *lst);
+void	lstadd_back(t_env **lst, t_env *new);
 t_env	*lstnew(char *key, char *value);
 void	env_init_list(char **envp, t_env **env);
-void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));//Se puede cambiar por ft_lstdelone de libft
+void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));
 
 /*--------------------t_tok -----------------*/
 t_tok	*tok_new_node(char *str, int type);
@@ -205,21 +196,21 @@ void	tok_add_back(t_tok **lst, t_tok *new);
 void	tok_free(t_tok **lst);
 int		tok_size(t_tok *lst);//ELIMINAR ANTES DE ENTREGA
 
-/*--------------------t_cmd--------TODAS-> s_cmd generada del parser-----------*/
+/*---------t_cmd--------TODAS-> s_cmd generada del parser--------*/
 t_cmd	*cmd_new_node(void);
 t_cmd	*cmd_last(t_cmd *lst);
 void	cmd_add_back(t_cmd **lst, t_cmd *new);
-void	cmd_free(t_cmd **lst);// IMPORTANTE para liberar la salida del parser
+void	cmd_free(t_cmd **lst);
 int		cmd_size(t_cmd *lst);//ELIMINAR ANTES DE ENTREGA
 
 /*--------------------t_redir-------TODAS-> s_redir -----------*/
-t_redir *redir_new_node(char *str, int redir_type, bool had_quotes);
+t_redir	*redir_new_node(char *str, int redir_type, bool had_quotes);
 t_redir	*redir_last(t_redir *lst);
 void	redir_add_back(t_redir **lst, t_redir *new);
 void	redir_free(t_redir **lst);
 int		redir_size(t_redir *lst);//ELIMINAR ANTES DE ENTREGA
 
-/*-------------------tokenizer-------TODAS -----------*/
+/*-------------------tokenizer-------------*/
 int		init_operator_type(char *line, t_tok **new_tok);
 int		tok_len(char *line, t_tok **new_tok);
 void	init_word_str(size_t len, t_tok *new_tok, char *line, size_t i);
@@ -227,7 +218,7 @@ void	init_word_str(size_t len, t_tok *new_tok, char *line, size_t i);
 /*---------------------parser-------TODAS ES EL NUCLEO ------------*/
 int		is_operator(t_tok *node);
 int		is_redirection(t_tok *node);
-void	handle_error(char *syntax_error_message);// del parser
+void	handle_error(char *syntax_error_message);
 size_t	commands_counter(t_tok *tok);
 int		syntax_check_1(t_tok *tok);
 int		syntax_check_2(t_tok *tok);
@@ -235,11 +226,10 @@ void	commands_creator(t_tok *tok, t_cmd *node);
 void	commands_filler(t_tok **tok, t_cmd *node);
 
 /*------------expander & quote removal----------*/
-
-void	should_expand(t_cmd *cmd, t_env *envlist);//comprobar si es rendundante
-char	*expander(char *str, t_env *envlist);//comprobar si es redundante
-void	init_xpdr(t_xpdr *xpdr);//comprobar si es rendundante
-size_t	new_tok_len(char *str, t_xpdr *xpdr, t_env *envlist);//comprobar si es rendundante
+void	should_expand(t_cmd *cmd, t_env *envlist);
+char	*expander(char *str, t_env *envlist);
+void	init_xpdr(t_xpdr *xpdr);
+size_t	new_tok_len(char *str, t_xpdr *xpdr, t_env *envlist);
 void	init_xpdr_except_result(t_xpdr *xpdr);
 void	get_dollar_len(char *str, t_xpdr *xpdr, t_env *envlist);
 char	*get_env_key(char *str);
@@ -267,7 +257,6 @@ void	free_ptr(void *ptr);
 int		is_builtins(t_cmd *cmd);
 bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
 
-//void	free_data_env(t_data_env_exe  *data);
 char	*ft_strjoin_free(char *s1, char const *s2);
 void	safe_close(int *fd);
 void	perror_exit(const char *context, int g_get_signal);
@@ -289,17 +278,15 @@ void	print_redir(t_redir *lst);//ELIMINAR ANTES DE ENTREGA
 void	ft_print_keys(t_env *env_struct);//ELIMINAR ANTES DE ENTREGA
 void	ft_print_values(t_env *env_struct);//ELIMINAR ANTES DE ENTREGA
 void	ft_printstack(t_env *env_struct);//ELIMINAR ANTES DE ENTREGA
-void	print_cmd_para_executor(t_cmd *lst);//ELIMINAR ANTES DE ENTREGA
+void	print_cmd_para_executor(t_cmd *lst);//ELIMINAR ANTES DE ENTREG
 
 /*------------------redirections---------------*/
-int		exist_redirections(t_cmd *cmd);// Puede ser útil para el parser/traductor
-
+int		exist_redirections(t_cmd *cmd);
 
 /*--- Manejo de Errores (Se mantiene, unificar con executor si es posible) ---*/
-int     msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
+int		msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
 
 /*-------------------heredoc-------------------*/
-//int		heredoc_create(t_redir *redir, int hd_nbr); ha pasado a estatica
 int		heredoc(t_cmd *cmd);
 
 #endif

@@ -98,7 +98,7 @@ static int	handle_redir_output_append(t_cmd_io_exe *exec_io, \
  * @param redir_list Puntero a la lista de redirecciones t_redir.
  * @return EXIT_SUCCESS si todo va bien, EXIT_FAILURE si falla ft_strdup.
  */
-int	populate_exec_io_from_redirections(t_cmd_io_exe *exec_io, \
+int	fill_exec_io_from_redirections(t_cmd_io_exe *exec_io, \
 										t_redir *redir_list)
 {
 	t_redir	*current_redir;

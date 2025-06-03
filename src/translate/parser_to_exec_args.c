@@ -48,7 +48,7 @@ static t_arg_info_exe	*create_arg_info_element(char *command_str)
  * @return Un array de punteros a t_arg_info_exe (t_arg_info_exe **) terminado
  * en NULL, o NULL si ocurre un error de asignación de memoria.
  */
-t_arg_info_exe	**translate_parser_args_to_exec_args(char **parser_commands)
+t_arg_info_exe	**transl_args_p_to_args_e(char **parser_commands)
 {
 	t_arg_info_exe	**exec_args;
 	int				arg_count;
