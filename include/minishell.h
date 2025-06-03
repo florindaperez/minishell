@@ -170,11 +170,11 @@ typedef struct s_xpdr
 /* ===== PROTOTIPOS DE FUNCIONES ===== */
 
 /*--------------------------- minishell.c ------------------------*/
-void	minishell(t_env **envlist_head_ptr);
-t_cmd	*parse_and_prepare_line(char *line, t_env *env_list_head);
+void	minishell(t_env *envlist_head_ptr);
 void	tokenizer(t_tok **tok, char *line);
 int		parser(t_cmd **cmd, t_tok *tok);
 void	cleaner_envlist(t_env **lst);
+t_cmd	*tokenize_parse_expand(char *line, t_env *env);
 
 /*---------------------------array 2d ------------------------*/
 size_t	size_arr2d(char **arr2d);

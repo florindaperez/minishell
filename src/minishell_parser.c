@@ -9,108 +9,81 @@
 /*   Updated: 2025/06/03 16:20:42 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 #include "minishell.h"
-#include "minishell_executor.h"
-
-/* Variable global para el estado de salida (definida en main.c) */
-extern int	g_get_signal;
 
 /*
- * Parte 1 del procesamiento: Tokeniza la línea.
- * Retorna la lista de tokens o NULL si hay error o señal.
-*/
-static t_tok	*tokenize_input_line(char *line)
+ * parse_and_handle_tokens
+ * Intenta parsear la lista de tokens en una lista de comandos.
+ * Libera la lista de tokens al finalizar.
+ *
+ * tok_list: Puntero al puntero de la lista de tokens.
+ * cmd_list: Puntero al puntero de la lista de comandos.
+ *
+ * Retorna: 0 en éxito, 1 en caso de error de parseo.
+ */
+static int	parse_and_handle_tokens(t_tok **tok_list, t_cmd **cmd_list)
 {
-	t_tok	*token_list;
-
-	token_list = NULL;
-	tokenizer(&token_list, line);
-	if (token_list == NULL || g_get_signal != 0)
+	if (parser(cmd_list, *tok_list) == 1)
 	{
-		if (token_list)
-			tok_free(&token_list);
-		return (NULL);
+		if (*cmd_list)
+			cmd_free(cmd_list);
+		tok_free(tok_list);
+		return (1);
 	}
-	return (token_list);
+	tok_free(tok_list);
+	return (0);
 }
 
 /*
- * Parte 2 del procesamiento: Parsea los tokens.
- * Libera token_list siempre. Retorna cmd_list o NULL en error/señal.
+ * expand_and_heredoc
+ * Realiza la expansión de variables y el manejo de heredocs para los comandos.
+ *
+ * cmd_list: Puntero al puntero de la lista de comandos.
+ * env: Puntero a la cabeza de la lista de entorno.
+ *
+ * Retorna: 0 en éxito, 1 en caso de error (ej. heredoc).
  */
-static t_cmd	*parse_token_list(t_tok **token_list_ptr)
+static int	expand_and_heredoc(t_cmd **cmd_list, t_env *env)
 {
+	should_expand(*cmd_list, env);
+	if (heredoc(*cmd_list) != 0)
+	{
+		cmd_free(cmd_list);
+		return (1);
+	}
+	return (0);
+}
+
+/*
+ * tokenize_parse_expand
+ * Tokeniza, parsea, expande variables y maneja heredocs para una línea.
+ *
+ * line: La línea de comando en bruto.
+ * env: Puntero a la cabeza de la lista de entorno, necesario para la expansión.
+ *
+ * Retorna: La cabeza de la lista de comandos procesada (t_cmd *),
+ * o NULL si hay un error o no hay comandos.
+ */
+t_cmd	*tokenize_parse_expand(char *line, t_env *env)
+{
+	t_tok	*tok_list;
 	t_cmd	*cmd_list;
 
+	tok_list = NULL;
 	cmd_list = NULL;
-	if (parser(&cmd_list, *token_list_ptr) == 1)
+	tokenizer(&tok_list, line);
+	if (tok_list == NULL && line != NULL && *line != '\0')
 	{
-		if (cmd_list)
-			cmd_free(&cmd_list);
-		tok_free(token_list_ptr);
+		msg_error_cmd("", NULL, "command not found", 127);
 		return (NULL);
 	}
-	tok_free(token_list_ptr);
-	if (g_get_signal != 0)
-	{
-		if (cmd_list)
-			cmd_free(&cmd_list);
+	if (tok_list == NULL)
 		return (NULL);
-	}
-	return (cmd_list);
-}
-
-/*
- * Parte 3 del procesamiento: Expande y maneja heredocs.
- * Retorna cmd_list modificado o NULL si hay error/señal (liberando cmd_list).
- */
-static t_cmd	*expand_and_heredoc(t_cmd *cmd_list, t_env *env_list_head)
-{
+	if (parse_and_handle_tokens(&tok_list, &cmd_list) == 1)
+		return (NULL);
 	if (cmd_list == NULL)
 		return (NULL);
-	should_expand(cmd_list, env_list_head);
-	if (g_get_signal != 0)
-	{
-		cmd_free(&cmd_list);
+	if (expand_and_heredoc(&cmd_list, env) == 1)
 		return (NULL);
-	}
-	if (heredoc(cmd_list) != 0)
-	{
-		cmd_free(&cmd_list);
-		return (NULL);
-	}
-	if (g_get_signal != 0)
-	{
-		cmd_free(&cmd_list);
-		return (NULL);
-	}
-	return (cmd_list);
-}
-
-/*
- * Procesa una línea de entrada completa.
- * Orquesta la tokenización, parseo, expansión y heredocs.
- * line: La línea de comando en bruto leída del usuario.
- * env_list_head: Puntero a la cabeza de la lista de variables de entorno.
- * Retorna: Una lista de comandos (t_cmd *) lista para ejecución,
- * o NULL si ocurre un error, la línea está vacía,
- * o una señal interrumpe el proceso.
- * Esta función será llamada desde minishell.c.
- */
-t_cmd	*parse_and_prepare_line(char *line, t_env *env_list_head)
-{
-	t_tok	*token_list;
-	t_cmd	*cmd_list;
-
-	if (!line || !*line)
-		return (NULL);
-	token_list = tokenize_input_line(line);
-	if (!token_list)
-		return (NULL);
-	cmd_list = parse_token_list(&token_list);
-	if (!cmd_list)
-		return (NULL);
-	cmd_list = expand_and_heredoc(cmd_list, env_list_head);
 	return (cmd_list);
 }
