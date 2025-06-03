@@ -176,11 +176,6 @@ void	tokenizer(t_tok **tok, char *line);
 int		parser(t_cmd **cmd, t_tok *tok);
 void	cleaner_envlist(t_env **lst);
 
-/*--------------------------- wellcome_msg.c ------------------------*/
-int		bg_color(void);
-void	init_msg(void);
-int		help_mini(void);
-
 /*---------------------------array 2d ------------------------*/
 size_t	size_arr2d(char **arr2d);
 char	**dup_arr2d(char **arr2d);
@@ -255,8 +250,6 @@ int		ft_msgs(int n, t_cmd *cmd);
 void	set_exit_status(int n);
 
 /*---------------------utils & utils1.c-------------------*/
-int		ca_strchr(const char *s, int c);
-char	*ft_strncpy(char *dest, char *src, unsigned int n);
 void	*p_malloc(size_t size);
 void	str_free_and_null(char **str);
 void	free_str_tab(char **tab);

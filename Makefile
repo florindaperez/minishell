@@ -138,7 +138,6 @@ FILES = \
     \
     utils/p_malloc.c \
     utils/utils1.c \
-    utils/wellcome_msg.c \
     utils/message_error.c \
 	utils/utils.c \
 	utils/array_utils.c \

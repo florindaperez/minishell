@@ -14,7 +14,6 @@
 
 /*
 * static bool	copy_strings_to_new_array(...)
-* ----------------------------------------------
 * Auxiliar de realloc_env_array. Copia y duplica cadenas.
 * (Nombre sin _ al inicio según tu preferencia).
 */
@@ -44,7 +43,6 @@ static bool	copy_strings_to_new_array(char **new_arr, char **old_arr, \
 
 /*
 * bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity)
-* -----------------------------------------------------------------------
 * Redimensiona un array de strings (char **), duplicando las cadenas.
 * new_element_capacity es el número de strings que el nuevo array podrá tener,
 * sin contar el NULL terminador.
