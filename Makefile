@@ -56,6 +56,8 @@ LIBS += -L${READLINE_ROOT} -ltermcap
 FILES = \
     main.c \
     minishell.c \
+	minishell_parser.c \
+	minishell_exec.c \
     signals.c \
     \
     arr2d/add_one_arr2d.c \
