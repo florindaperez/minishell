@@ -54,12 +54,13 @@ static bool	msg_export_unset(char *arg_cmd)
 }
 
 /*
- * msg_error_cmd : Mostramos el mensaje de error. Simula mensajes de minishell: 
- * Si el comando es  "export" o "unset", se añaden comillas invertidas alrededor 
- * "descrip", imprime el mensaje STDERR_FILENO y devolvemos "nb_err" ,codigo del 
- * error.
+ * msg_error_cmd : Mostramos el mensaje de error. Simula mensajes de minishell:
+ * Si el comando es  "export" o "unset", se añaden comillas invertidas alrededor
+ * "descrip", imprime el mensaje STDERR_FILENO, actualiza g_get_signal y
+ * devolvemos "nb_err" ,codigo del error.
  *
 */
+
 int	msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err)
 {
 	char	*msg;
@@ -84,5 +85,6 @@ int	msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err)
 	msg = merge_msg(msg, err_msg);
 	ft_putendl_fd(msg, STDERR_FILENO);
 	free_ptr(msg);
+	set_exit_status(nb_err);
 	return (nb_err);
 }

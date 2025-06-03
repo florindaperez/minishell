@@ -12,7 +12,7 @@
 
 #include "minishell.h"
 
-/*Returns '1' if two consecutive operators on the list are found, otherwise 
+/*Returns '1' if two consecutive operators on the list are found, otherwise
 returns 0*/
 int	syntax_check_2(t_tok *tok)
 {
@@ -23,7 +23,7 @@ int	syntax_check_2(t_tok *tok)
 	{
 		if (is_operator(tmp) && is_operator(tmp->next))
 		{
-			handle_error(PRINT_SYNTAX_ERR_3, &tok);
+			handle_error(PRINT_SYNTAX_ERR_3);
 			return (1);
 		}
 		tmp = tmp->next;

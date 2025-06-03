@@ -1,0 +1,23 @@
+// .vscode/launch.json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Minishell -c",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/minishell",
+            "args": ["-c", "echo 1''2''3"],  // Argumentos de prueba
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [{"name": "ASAN_OPTIONS", "value": "detect_leaks=1"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {"text": "handle SIGINT nostop pass"}
+            ],
+            "preLaunchTask": "Build Minishell",
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
+    ]
+}
