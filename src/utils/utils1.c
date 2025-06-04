@@ -52,3 +52,22 @@ void	free_ptr(void *ptr)
 		free(ptr);
 	}
 }
+
+/*
+ * ft_is_all_space
+ * Comprueba si una cadena consiste enteramente en espacios en blanco.
+ * Retorna: 1 si todos los caracteres son espacio en blanco o está vacía,
+ *  0 en caso contrario.
+ */
+int	ft_is_all_space(char *str)
+{
+	if (!str)
+		return (1);
+	while (*str)
+	{
+		if (!ft_isspace((unsigned char)*str))
+			return (0);
+		str++;
+	}
+	return (1);
+}

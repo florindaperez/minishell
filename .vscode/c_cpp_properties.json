@@ -10,7 +10,7 @@
       "cppStandard": "${default}",
       "intelliSenseMode": "linux-clang-x64",
       "compilerArgs": [
-        "echo 1"
+        ""
       ]
     }
   ],

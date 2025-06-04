@@ -248,6 +248,7 @@ void	handle_dollar_invalid_syntax(char *str, t_xpdr *xpdr);
 /*---------------------------utils0.c -------------------------*/
 int		ft_msgs(int n, t_cmd *cmd);
 void	set_exit_status(int n);
+int		ft_is_all_space(char *str);
 
 /*---------------------utils & utils1.c-------------------*/
 void	*p_malloc(size_t size);

@@ -1,23 +1,42 @@
-// .vscode/launch.json
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Minishell -c",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/minishell",
-            "args": ["-c", "echo 1''2''3"],  // Argumentos de prueba
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [{"name": "ASAN_OPTIONS", "value": "detect_leaks=1"}],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {"text": "handle SIGINT nostop pass"}
+            "name": "Debug with Makefile (External Terminal)", // Nombre de la configuración
+            "type": "cppdbg", // Tipo de depurador para C/C++
+            "request": "launch", // Modo de lanzamiento (iniciar el programa)
+            "program": "${workspaceFolder}/minishell", // Ruta al ejecutable de tu minishell
+            "args": [], // Argumentos de línea de comandos para tu programa
+            "stopAtEntry": false, // No detenerse en la primera instrucción
+            "cwd": "${workspaceFolder}", // Directorio de trabajo
+            "environment": [], // Variables de entorno
+            "externalConsole": false, // ¡IMPORTANTE! Abre una terminal externa para la interacción
+            "MIMode": "gdb", // Usa GDB como interfaz de depuración
+            "setupCommands": [ // Comandos que se envían a GDB antes de iniciar la depuración
+                {
+                    "description": "Enable pretty printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                },
+                // Estos comandos son cruciales para depurar programas que usan fork()
+                {
+                    "description": "Set follow-fork-mode to child",
+                    "text": "set follow-fork-mode child", // GDB seguirá al proceso hijo después de un fork
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set detach-on-fork to off",
+                    "text": "set detach-on-fork off", // GDB no se desvinculará del proceso padre
+                    "ignoreFailures": true
+                }
             ],
-            "preLaunchTask": "Build Minishell",
-            "miDebuggerPath": "/usr/bin/gdb"
+            "preLaunchTask": "build with make", // Tarea a ejecutar antes de depurar (debe coincidir con el 'label' en tasks.json)
+            "miDebuggerPath": "/usr/bin/gdb" // Ruta a tu ejecutable GDB (ajusta si es diferente en tu sistema)
         }
     ]
 }

@@ -6,7 +6,7 @@
 /*   By: jocuni-p <jocuni-p@student.42barcelona.com +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/07 17:00:08 by jocuni-p          #+#    #+#             */
-/*   Updated: 2024/06/10 10:51:57 by jocuni-p         ###   ########.fr       */
+/*   Updated: 2025/06/04 17:54:48 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "minishell.h"
@@ -78,7 +78,7 @@ static void	main_process_loop_step(t_env **envlist_ptr)
 
 	line_input = generate_line();
 	control_and_d(line_input);
-	if (!line_input || !*line_input)
+	if (ft_is_all_space(line_input))
 	{
 		if (line_input)
 			free(line_input);
