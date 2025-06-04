@@ -16,6 +16,7 @@
 *.out
 *.txt
 
+*.gitignore
 
 minitester-minishell-tester/
 tester_builtin_echo_pwd.sh

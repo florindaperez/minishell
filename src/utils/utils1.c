@@ -12,46 +12,6 @@
 
 #include "minishell.h"
 
-/*Returns 1 if 'c' ('\0' included) is located in 's', otherwise returns 0*/
-int	ca_strchr(const char *s, int c)
-{
-	int	i;
-
-	i = 0;
-	c = (unsigned char) c;
-	if (!s)
-		return (0);
-	while (s[i])
-	{
-		if (s[i] == c)
-			return (1);
-		i++;
-	}
-	if (c == '\0')
-		return (0);
-	return (0);
-}
-
-char	*ft_strncpy(char *dest, char *src, unsigned int n)
-{
-	unsigned int	i;
-
-	i = 0;
-	if (!dest || !src)
-		return (NULL);
-	while (src[i] != '\0' && i < n)
-	{
-		dest[i] = src[i];
-		i++;
-	}
-	while (i < n)
-	{
-		dest[i] = '\0';
-		i++;
-	}
-	return (dest);
-}
-
 /*
  * free_str_tab: Libera un array de strings terminado en NULL (char **).
  * Recorre el array liberando cada string y finalmente el propio array.
@@ -91,4 +51,23 @@ void	free_ptr(void *ptr)
 	{
 		free(ptr);
 	}
+}
+
+/*
+ * ft_is_all_space
+ * Comprueba si una cadena consiste enteramente en espacios en blanco.
+ * Retorna: 1 si todos los caracteres son espacio en blanco o está vacía,
+ *  0 en caso contrario.
+ */
+int	ft_is_all_space(char *str)
+{
+	if (!str)
+		return (1);
+	while (*str)
+	{
+		if (!ft_isspace((unsigned char)*str))
+			return (0);
+		str++;
+	}
+	return (1);
 }

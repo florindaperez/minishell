@@ -1,20 +1,22 @@
-// .vscode/tasks.json
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Build Minishell",
-            "type": "shell",
-            "command": "make re",  // Usa tu Makefile
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build with make", // Un nombre descriptivo para tu tarea
+			"type": "shell",
+			"command": "make", // El comando que ejecuta tu Makefile
+			"args": [], // Argumentos adicionales para 'make' si los necesitas (ej. "clean")
+			"options": {
+				"cwd": "${workspaceFolder}" // Ejecuta 'make' en la raíz de tu proyecto
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true // Marca esta como la tarea de compilación predeterminada
+			},
+			"problemMatcher": [
+				"$gcc" // Para capturar errores de compilación de GCC si tu Makefile usa GCC
+			],
+			"detail": "Runs 'make' to build the project"
+		}
+	]
 }

@@ -33,6 +33,14 @@
 # include <sys/stat.h>
 # include <stdbool.h>
 
+/**
+ * Define PATH_SIZE para la longitud máxima de una ruta de archivo.
+ *
+ * Se utiliza el valor de PATH_MAX del sistema (usualmente de <limits.h>)
+ * si está disponible. En caso contrario, se establece un valor de
+ * fallback (en uestro caso 4096) para asegurar que PATH_SIZE
+ * siempre tenga una definición.
+ */
 /*-------- Defines para Rutas --------*/
 // Fallback para PATH_MAX si no está definido por <limits.h>
 # ifndef PATH_MAX
@@ -162,17 +170,11 @@ typedef struct s_xpdr
 /* ===== PROTOTIPOS DE FUNCIONES ===== */
 
 /*--------------------------- minishell.c ------------------------*/
-int		set_signals(int mode);
-void	minishell(t_env *envlist);
+void	minishell(t_env *envlist_head_ptr);
 void	tokenizer(t_tok **tok, char *line);
 int		parser(t_cmd **cmd, t_tok *tok);
 void	cleaner_envlist(t_env **lst);
-void	control_and_d(char *line);
-
-/*--------------------------- wellcome_msg.c ------------------------*/
-int		bg_color(void);
-void	init_msg(void);
-int		help_mini(void);
+t_cmd	*tokenize_parse_expand(char *line, t_env *env);
 
 /*---------------------------array 2d ------------------------*/
 size_t	size_arr2d(char **arr2d);
@@ -246,10 +248,9 @@ void	handle_dollar_invalid_syntax(char *str, t_xpdr *xpdr);
 /*---------------------------utils0.c -------------------------*/
 int		ft_msgs(int n, t_cmd *cmd);
 void	set_exit_status(int n);
+int		ft_is_all_space(char *str);
 
 /*---------------------utils & utils1.c-------------------*/
-int		ca_strchr(const char *s, int c);
-char	*ft_strncpy(char *dest, char *src, unsigned int n);
 void	*p_malloc(size_t size);
 void	str_free_and_null(char **str);
 void	free_str_tab(char **tab);

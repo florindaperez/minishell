@@ -12,7 +12,6 @@
 
 #include "minishell.h"
 #include "minishell_executor.h"
-#include <stdlib.h>
 
 static void	free_cmd_io(t_cmd_io_exe *io);
 static void	free_pwd_oldpwd_in_data(t_data_env_exe *data);

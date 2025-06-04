@@ -56,6 +56,8 @@ LIBS += -L${READLINE_ROOT} -ltermcap
 FILES = \
     main.c \
     minishell.c \
+	minishell_parser.c \
+	minishell_exec.c \
     signals.c \
     \
     arr2d/add_one_arr2d.c \
@@ -136,7 +138,6 @@ FILES = \
     \
     utils/p_malloc.c \
     utils/utils1.c \
-    utils/wellcome_msg.c \
     utils/message_error.c \
 	utils/utils.c \
 	utils/array_utils.c \
