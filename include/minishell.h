@@ -174,7 +174,7 @@ void	minishell(t_env *envlist_head_ptr);
 void	tokenizer(t_tok **tok, char *line);
 int		parser(t_cmd **cmd, t_tok *tok);
 void	cleaner_envlist(t_env **lst);
-t_cmd	*tokenize_parse_expand(char *line, t_env *env);
+t_cmd	*tokenize_parse_expand(char *line, t_env *env, t_list **heredoc_tmp_f);
 
 /*---------------------------array 2d ------------------------*/
 size_t	size_arr2d(char **arr2d);
@@ -248,20 +248,24 @@ void	handle_dollar_invalid_syntax(char *str, t_xpdr *xpdr);
 /*---------------------------utils0.c -------------------------*/
 int		ft_msgs(int n, t_cmd *cmd);
 void	set_exit_status(int n);
-int		ft_is_all_space(char *str);
 
-/*---------------------utils & utils1.c-------------------*/
-void	*p_malloc(size_t size);
-void	str_free_and_null(char **str);
+/*---------------------utils1.c-------------------*/
 void	free_str_tab(char **tab);
+void	str_free_and_null(char **str);
 void	free_ptr(void *ptr);
-int		is_builtins(t_cmd *cmd);
-bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
+int		ft_is_all_space(char *str);
+void	del_heredoc_tmp_f(void *content);
 
+/*---------------------utils.c-------------------*/
 char	*ft_strjoin_free(char *s1, char const *s2);
 void	safe_close(int *fd);
 void	perror_exit(const char *context, int g_get_signal);
 int		ft_isspace(int c);
+int		is_builtins(t_cmd *cmd);
+
+bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
+void	*p_malloc(size_t size);
+
 void	signals_noninteractive(void);
 void	signals_interactive(void);
 
@@ -288,6 +292,6 @@ int		exist_redirections(t_cmd *cmd);
 int		msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
 
 /*-------------------heredoc-------------------*/
-int		heredoc(t_cmd *cmd);
+int	heredoc(t_cmd *cmd, t_list **heredoc_tmp_f);
 
 #endif

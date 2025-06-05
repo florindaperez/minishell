@@ -1,1 +1,0 @@
-Ejecutable de prueba

@@ -34,26 +34,6 @@ static int	handle_redir_input(t_cmd_io_exe *exec_io, t_redir *redir_node)
 }
 
 /*
- * Maneja la redirección de tipo HEREDOC_INPUT.
- * Actualiza exec_io->heredoc_delimiter, heredoc_quotes y resetea infile.
- *
- * @param exec_io Puntero a la estructura t_cmd_io_exe a actualizar.
- * @param redir_node Puntero al nodo de redirección t_redir actual.
- * @return EXIT_SUCCESS o EXIT_FAILURE si ft_strdup falla.
- */
-static int	handle_heredoc_input(t_cmd_io_exe *exec_io, t_redir *redir_node)
-{
-	free_ptr(exec_io->heredoc_delimiter);
-	exec_io->heredoc_delimiter = ft_strdup(redir_node->fname);
-	if (!exec_io->heredoc_delimiter && redir_node->fname)
-		return (EXIT_FAILURE);
-	exec_io->heredoc_quotes = redir_node->original_delimiter_had_quotes;
-	free_ptr(exec_io->infile);
-	exec_io->infile = NULL;
-	return (EXIT_SUCCESS);
-}
-
-/*
  * Maneja la redirección de tipo REDIR_OUTPUT.
  * Actualiza exec_io->outfile y establece append_mode a false.
  *
@@ -113,10 +93,9 @@ int	fill_exec_io_from_redirections(t_cmd_io_exe *exec_io, \
 			current_redir = current_redir->next;
 			continue ;
 		}
-		if (current_redir->redir_type == REDIR_INPUT)
+		if (current_redir->redir_type == REDIR_INPUT ||
+			current_redir->redir_type == HEREDOC_INPUT)
 			status = handle_redir_input(exec_io, current_redir);
-		else if (current_redir->redir_type == HEREDOC_INPUT)
-			status = handle_heredoc_input(exec_io, current_redir);
 		else if (current_redir->redir_type == REDIR_OUTPUT)
 			status = handle_redir_output(exec_io, current_redir);
 		else if (current_redir->redir_type == REDIR_OUTPUT_APPEND)

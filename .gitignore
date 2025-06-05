@@ -15,6 +15,7 @@
 *.a
 *.out
 *.txt
+*.sh
 
 .objs_coverage/
 .dep_coverage/

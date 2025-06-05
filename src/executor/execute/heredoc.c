@@ -29,13 +29,14 @@
  * @return Retorna 0 si tiene éxito. Podría expandirse para retornar
  * códigos de error.
  */
-static int	heredoc_create(t_redir *redir, int hd_nbr)
+static int	heredoc_create(t_redir *redir, int hd_nbr, t_list **heredoc_tmp_f)
 {
 	char	*tmp_dir;
 	int		fd_tmp;
 	char	*line;
 
 	tmp_dir = ft_strjoin("/tmp/heredoc", ft_itoa(hd_nbr));
+	ft_lstadd_back(heredoc_tmp_f, ft_lstnew(ft_strdup(tmp_dir))); 
 	fd_tmp = open(tmp_dir, O_CREAT | O_WRONLY | O_TRUNC, 0660);
 	line = readline("> ");
 	while (line && ft_strcmp(line, redir->fname) != 0)
@@ -65,7 +66,7 @@ static int	heredoc_create(t_redir *redir, int hd_nbr)
  * @return Retorna 0. Podría expandirse para manejar errores y
  * retornar un estado diferente.
  */
-int	heredoc(t_cmd *cmd)
+int	heredoc(t_cmd *cmd, t_list **heredoc_tmp_f)
 {
 	t_redir	*aux;
 	int		hd_nbr;
@@ -78,7 +79,7 @@ int	heredoc(t_cmd *cmd)
 		{
 			if (aux->redir_type == HEREDOC_INPUT)
 			{
-				heredoc_create(aux, hd_nbr);
+				heredoc_create(aux, hd_nbr, heredoc_tmp_f);
 				hd_nbr++;
 			}
 			aux = aux->next;

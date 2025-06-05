@@ -22,16 +22,24 @@ static void	process_command_line(char *line, t_env **envlist_ptr)
 {
 	t_cmd			*cmd_list;
 	t_data_env_exe	data;
+	t_list			*heredoc_tmp_f;
 
+	heredoc_tmp_f =NULL;
 	cmd_list = NULL;
 	if (!line || !envlist_ptr)
 		return ;
-	cmd_list = tokenize_parse_expand(line, *envlist_ptr);
+	cmd_list = tokenize_parse_expand(line, *envlist_ptr, &heredoc_tmp_f);
 	if (cmd_list == NULL)
+	{
+		if(heredoc_tmp_f)
+			ft_lstclear(&heredoc_tmp_f, del_heredoc_tmp_f);
 		return ;
+	}
 	execute_pipeline_logic(cmd_list, envlist_ptr, &data);
 	if (cmd_list)
 		cmd_free(&cmd_list);
+	if (heredoc_tmp_f)
+		ft_lstclear(&heredoc_tmp_f, del_heredoc_tmp_f);
 }
 
 /*

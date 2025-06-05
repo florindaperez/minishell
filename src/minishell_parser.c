@@ -43,10 +43,10 @@ static int	parse_and_handle_tokens(t_tok **tok_list, t_cmd **cmd_list)
  *
  * Retorna: 0 en éxito, 1 en caso de error (ej. heredoc).
  */
-static int	expand_and_heredoc(t_cmd **cmd_list, t_env *env)
+static int	expand_and_heredoc(t_cmd **cmd_list, t_env *env, t_list **heredoc_tmp_f)
 {
 	should_expand(*cmd_list, env);
-	if (heredoc(*cmd_list) != 0)
+	if (heredoc(*cmd_list, heredoc_tmp_f) != 0)
 	{
 		cmd_free(cmd_list);
 		return (1);
@@ -64,7 +64,7 @@ static int	expand_and_heredoc(t_cmd **cmd_list, t_env *env)
  * Retorna: La cabeza de la lista de comandos procesada (t_cmd *),
  * o NULL si hay un error o no hay comandos.
  */
-t_cmd	*tokenize_parse_expand(char *line, t_env *env)
+t_cmd	*tokenize_parse_expand(char *line, t_env *env, t_list **heredoc_tmp_f)
 {
 	t_tok	*tok_list;
 	t_cmd	*cmd_list;
@@ -83,7 +83,7 @@ t_cmd	*tokenize_parse_expand(char *line, t_env *env)
 		return (NULL);
 	if (cmd_list == NULL)
 		return (NULL);
-	if (expand_and_heredoc(&cmd_list, env) == 1)
+	if (expand_and_heredoc(&cmd_list, env, heredoc_tmp_f) == 1)
 		return (NULL);
 	return (cmd_list);
 }

@@ -71,3 +71,12 @@ int	ft_is_all_space(char *str)
 	}
 	return (1);
 }
+
+void	del_heredoc_tmp_f(void *content)
+{
+    if (content)
+    {
+        unlink((char *)content);
+        free(content);
+    }
+}
