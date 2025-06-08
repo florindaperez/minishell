@@ -49,16 +49,22 @@ static pid_t	do_fork_and_pipe(t_pipeline_state_exe *p_state)
 static void	child_exec_logic(t_cmd_exe *cmd, t_data_env_exe *data,
 							t_pipeline_state_exe *p_state)
 {
-	int	out_fd_for_child;
+	int	out_fd;
+	int	in_fd;
 
-	out_fd_for_child = -1;
+	in_fd = *(p_state->prev_pipe_read_fd_ptr);
+	out_fd = -1;
 	if (p_state->is_next_command)
 	{
 		safe_close(&p_state->current_pipe_fds[0]);
-		out_fd_for_child = p_state->current_pipe_fds[1];
+		out_fd = p_state->current_pipe_fds[1];
 	}
-	execute_child_process(cmd, data, *(p_state->prev_pipe_read_fd_ptr),
-		out_fd_for_child);
+	if (p_state->is_next_command)
+	{
+		out_fd = p_state->current_pipe_fds[1];
+		safe_close(&p_state->current_pipe_fds[0]);
+	}
+	execute_child_process(cmd, data, in_fd, out_fd);
 	exit(EXIT_FAILURE);
 }
 

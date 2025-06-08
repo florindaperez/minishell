@@ -72,11 +72,16 @@ int	ft_is_all_space(char *str)
 	return (1);
 }
 
+/*
+* La función del_heredoc_tmp_f es una función de "limpieza". Borra los 
+* ficheros temporales que se crean para los Here Documents (<<) y libera 
+*  la memoria usada para guardar.
+*/
 void	del_heredoc_tmp_f(void *content)
 {
-    if (content)
-    {
-        unlink((char *)content);
-        free(content);
-    }
+	if (content)
+	{
+		unlink((char *)content);
+		free(content);
+	}
 }

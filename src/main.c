@@ -36,4 +36,3 @@ int	main(int ac, char *av[], char *envp[])
 	cleaner_envlist(&envlist);
 	return (g_get_signal);
 }
-

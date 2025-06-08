@@ -35,9 +35,9 @@ static int	heredoc_create(t_redir *redir, int hd_nbr, t_list **heredoc_tmp_f)
 	int		fd_tmp;
 	char	*line;
 
-	tmp_dir = ft_strjoin("/tmp/heredoc", ft_itoa(hd_nbr));
-	ft_lstadd_back(heredoc_tmp_f, ft_lstnew(ft_strdup(tmp_dir))); 
-	fd_tmp = open(tmp_dir, O_CREAT | O_WRONLY | O_TRUNC, 0660);
+	tmp_dir = ft_strjoin("/tmp/joan_flori_heredoc", ft_itoa(hd_nbr));
+	ft_lstadd_back(heredoc_tmp_f, ft_lstnew(ft_strdup(tmp_dir)));
+	fd_tmp = open(tmp_dir, O_CREAT | O_WRONLY | O_TRUNC, 0666);
 	line = readline("> ");
 	while (line && ft_strcmp(line, redir->fname) != 0)
 	{

@@ -85,32 +85,37 @@ bool	handle_pipeline_preliminaries(t_cmd_exe *cmds, t_data_env_exe *data)
 }
 
 /*
- * Espera a que todos los procesos hijos terminen.
- * Retorna el código de salida del último comando del pipeline.
- */
+* wait_for_all_children
+*
+* Espera a que todos los procesos hijos terminen.
+* Primero, espera de forma bloqueante al último proceso del pipeline
+* para obtener su estado de salida. Luego, entra en un bucle para
+* recoger (reap) a todos los demás hijos que pudieran haber quedado
+* como zombies, manejando las interrupciones por señales.
+*/
 int	wait_for_all_children(pid_t last_pid)
 {
-	int		status_of_last;
+	int		status;
+	int		exit_code;
 	pid_t	waited_pid;
-	int		dummy_status_for_cleanup;
 
-	status_of_last = EXIT_SUCCESS;
+	exit_code = EXIT_SUCCESS;
 	if (last_pid > 0)
-		status_of_last = get_specific_child_exit_status(last_pid);
-	while (true)
 	{
-		waited_pid = waitpid(-1, &dummy_status_for_cleanup, WNOHANG);
+		waitpid(last_pid, &status, 0);
+		if (WIFEXITED(status))
+			exit_code = WEXITSTATUS(status);
+		else if (WIFSIGNALED(status))
+			exit_code = 128 + WTERMSIG(status);
+	}
+	while (1)
+	{
+		waited_pid = wait(NULL);
 		if (waited_pid == -1)
 		{
-			if (errno == ECHILD)
+			if (errno == ECHILD || errno == EINTR)
 				break ;
-			perror("minishell: waitpid failed while cleaning zombies");
-			if (last_pid <= 0 && status_of_last == EXIT_SUCCESS)
-				status_of_last = EXIT_FAILURE;
-			break ;
 		}
-		if (waited_pid == 0)
-			break ;
 	}
-	return (status_of_last);
+	return (exit_code);
 }

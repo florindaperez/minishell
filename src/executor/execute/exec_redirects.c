@@ -12,40 +12,45 @@
 #include "minishell.h" // Incluir lo necesario
 #include "minishell_executor.h"
 
-static void	redirect_fd(int old_fd, int new_fd, const char *error_msg_prefix)
+/*
+* redirect_fd
+*
+* Wrapper para dup2 que incluye manejo de errores.
+* Duplica old_fd en new_fd.
+*/
+static void	redirect_fd(int old_fd, int new_fd)
 {
 	if (dup2(old_fd, new_fd) == -1)
-		perror_exit(error_msg_prefix, EXIT_FAILURE);
+		perror_exit("minishell: dup2 failed", EXIT_FAILURE);
 }
 
-/**
- * Configura las redirecciones de E/S para un proceso hijo.
- * Usa pipes y descriptores de archivo ya abiertos en cmd->io.
- */
+/*
+* setup_child_redirections
+*
+* Configura las redirecciones de E/S para un proceso hijo.
+* Prioriza las redirecciones de fichero (ej: < file) sobre los pipes.
+* Cierra los descriptores de fichero originales de los pipes después
+* de la redirección para prevenir cuelgues y fugas de descriptores.
+*/
 void	setup_child_redirections(t_cmd_exe *cmd, int pipe_in_fd,
 									int pipe_out_fd)
 {
-	bool	stdin_redirected;
-	bool	stdout_redirected;
-
-	stdin_redirected = false;
-	stdout_redirected = false;
 	if (cmd && cmd->io && cmd->io->fd_in != -1)
 	{
-		redirect_fd(cmd->io->fd_in, STDIN_FILENO, "dup2 file input");
+		redirect_fd(cmd->io->fd_in, STDIN_FILENO);
 		safe_close(&cmd->io->fd_in);
-		stdin_redirected = true;
 	}
+	else if (pipe_in_fd != -1)
+		redirect_fd(pipe_in_fd, STDIN_FILENO);
 	if (cmd && cmd->io && cmd->io->fd_out != -1)
 	{
-		redirect_fd(cmd->io->fd_out, STDOUT_FILENO, "dup2 file output");
+		redirect_fd(cmd->io->fd_out, STDOUT_FILENO);
 		safe_close(&cmd->io->fd_out);
-		stdout_redirected = true;
 	}
-	if (!stdin_redirected && pipe_in_fd != -1)
-		redirect_fd(pipe_in_fd, STDIN_FILENO, "dup2 pipe input");
-	if (!stdout_redirected && pipe_out_fd != -1)
-		redirect_fd(pipe_out_fd, STDOUT_FILENO, "dup2 pipe output");
-	safe_close(&pipe_in_fd);
-	safe_close(&pipe_out_fd);
+	else if (pipe_out_fd != -1)
+		redirect_fd(pipe_out_fd, STDOUT_FILENO);
+	if (pipe_in_fd != -1)
+		safe_close(&pipe_in_fd);
+	if (pipe_out_fd != -1)
+		safe_close(&pipe_out_fd);
 }

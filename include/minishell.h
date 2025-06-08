@@ -292,6 +292,6 @@ int		exist_redirections(t_cmd *cmd);
 int		msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
 
 /*-------------------heredoc-------------------*/
-int	heredoc(t_cmd *cmd, t_list **heredoc_tmp_f);
+int		heredoc(t_cmd *cmd, t_list **heredoc_tmp_f);
 
 #endif

@@ -93,8 +93,8 @@ int	fill_exec_io_from_redirections(t_cmd_io_exe *exec_io, \
 			current_redir = current_redir->next;
 			continue ;
 		}
-		if (current_redir->redir_type == REDIR_INPUT ||
-			current_redir->redir_type == HEREDOC_INPUT)
+		if (current_redir->redir_type == REDIR_INPUT
+			||current_redir->redir_type == HEREDOC_INPUT)
 			status = handle_redir_input(exec_io, current_redir);
 		else if (current_redir->redir_type == REDIR_OUTPUT)
 			status = handle_redir_output(exec_io, current_redir);
