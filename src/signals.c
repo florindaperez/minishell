@@ -13,30 +13,16 @@
 #include "minishell.h"
 
 /*
- * Este archivo gestiona el comportamiento del shell ante SIGINT y SIGQUIT.
- * Distingue entre modo interactivo (esperando input) y no interactivo
- * (ejecutando un comando).
- *
- * Modo Interactivo:
- * - Ctrl+C (SIGINT): Cancela línea, g_get_signal=130, nuevo prompt.
- * - Ctrl+\ (SIGQUIT): Ignorado.
- *
- * Modo No Interactivo:
- * - Ctrl+C / Ctrl+\: Padre imprime newline. Senal afecta al hijo.
- * g_get_signal se actualiza (respaldo), waitpid determina
- * el final. Hijos restauran manejo por defecto (terminar).
- */
-
-/*
- * signal_reset_prompt: Manejador para SIGINT (Ctrl+C) en modo interactivo.
- *
- * Acción:
- * - Establece g_get_signal a 130 (128 + SIGINT).
- * - Imprime una nueva línea.
- * - Notifica a readline que empiece en una nueva línea.
- * - Borra el buffer actual de readline.
- * - Vuelve a mostrar el prompt vacío.
- */
+** signal_reset_prompt
+** -------------------
+** Descripción:
+** Manejador para la señal SIGINT (Ctrl+C) en modo interactivo.
+** Establece una variable global a 130, imprime una nueva línea y reinicia
+** el prompt de readline para una nueva entrada de usuario.
+**
+** Parámetros:
+** - int signal_num: El número de la señal recibida (no se utiliza).
+*/
 static void	signal_reset_prompt(int signal_num)
 {
 	(void)signal_num;
@@ -48,64 +34,60 @@ static void	signal_reset_prompt(int signal_num)
 }
 
 /*
- * ignore_sigquit: Configura el manejador para SIGQUIT (Ctrl+\) a SIG_IGN.
- * Usado en modo interactivo para que Ctrl+\ no afecte al shell.
- */
-static void	ignore_sigquit(void)
-{
-	struct sigaction	conf_signal;
-
-	ft_memset(&conf_signal, 0, sizeof(conf_signal));
-	conf_signal.sa_handler = SIG_IGN;
-	sigaction(SIGQUIT, &conf_signal, NULL);
-}
-
-/*
- * signals_interactive: Configura manejadores para el modo interactivo.
- * - SIGINT (Ctrl+C): Llama a signal_reset_prompt.
- * - SIGQUIT (Ctrl+\): Se ignora (llama a ignore_sigquit).
- */
+** signals_interactive
+** -------------------
+** Descripción:
+** Configura los manejadores para el modo interactivo usando sigaction.
+** - SIGINT (Ctrl+C): Llama a signal_reset_prompt. La bandera SA_RESTART
+** ayuda a evitar que algunas llamadas al sistema sean interrumpidas.
+** - SIGQUIT (Ctrl+\): Se ignora.
+*/
 void	signals_interactive(void)
 {
-	struct sigaction	conf_signal;
+	struct sigaction	sa_int;
+	struct sigaction	sa_quit;
 
-	ignore_sigquit();
-	ft_memset(&conf_signal, 0, sizeof(conf_signal));
-	conf_signal.sa_handler = &signal_reset_prompt;
-	conf_signal.sa_flags = SA_RESTART;
-	sigaction(SIGINT, &conf_signal, NULL);
+	ft_memset(&sa_int, 0, sizeof(sa_int));
+	ft_memset(&sa_quit, 0, sizeof(sa_quit));
+	sa_int.sa_handler = signal_reset_prompt;
+	sa_int.sa_flags = SA_RESTART;
+	sa_quit.sa_handler = SIG_IGN;
+	sigaction(SIGINT, &sa_int, NULL);
+	sigaction(SIGQUIT, &sa_quit, NULL);
 }
 
 /*
- * signal_print_newline: Manejador para SIGINT/SIGQUIT en modo no interactivo.
- *
- * Acción:
- * - Imprime una nueva línea para limpieza visual si el hijo fue interrumpido.
- * - Establece g_get_signal (130 o 131) como respaldo. El valor principal
- * vendrá de waitpid al recoger el estado del hijo terminado por senal.
- */
-static void	signal_print_newline(int signal_num)
+** signals_during_execution
+** --------------------------
+** Descripción:
+** Configura al padre para que ignore las señales mientras un hijo se ejecuta.
+** De esta forma, la señal solo afectará al proceso hijo.
+** Se debe llamar en el proceso padre antes de la llamada a waitpid.
+*/
+void	signals_during_execution(void)
 {
-	if (signal_num == SIGINT)
-		g_get_signal = 130;
-	else if (signal_num == SIGQUIT)
-		g_get_signal = 131;
-	write(STDOUT_FILENO, "\n", 1);
+	struct sigaction	sa;
+
+	ft_memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = SIG_IGN;
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
 }
 
 /*
- * signals_noninteractive: Configura manejadores para modo no interactivo.
- *
- * Llama a signal_print_newline tanto para SIGINT como para SIGQUIT.
- * El shell padre reacciona mínimamente, la senal va al hijo.
- */
-void	signals_noninteractive(void)
+** signals_default_for_child
+** ---------------------------
+** Descripción:
+** Restaura el comportamiento por defecto de las señales en el proceso hijo
+** justo antes de llamar a execve. Esto asegura que el comando que se ejecuta
+** (como 'sleep') termine al recibir Ctrl+C, como lo haría en un shell normal.
+*/
+void	signals_default_for_child(void)
 {
-	struct sigaction	conf_signal;
+	struct sigaction	sa;
 
-	ft_memset(&conf_signal, 0, sizeof(conf_signal));
-	conf_signal.sa_handler = &signal_print_newline;
-	conf_signal.sa_flags = 0;
-	sigaction(SIGINT, &conf_signal, NULL);
-	sigaction(SIGQUIT, &conf_signal, NULL);
+	ft_memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = SIG_DFL;
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL);
 }

@@ -1,9 +1,0 @@
-appendfile.txt
-empty_file.txt
-infile.txt
-outfile.txt
-
-perm_denied_dir
-script_executable.sh
-script_no_execute.sh
-testdir

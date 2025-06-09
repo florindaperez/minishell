@@ -14,9 +14,9 @@
 int	g_get_signal = 0;
 
 /*
-*  Punto de entrada principal de minishell.
-* Inicializa el entorno y llama al bucle interactivo.
-*/
+ *  Punto de entrada principal de minishell.
+ * Inicializa el entorno y llama al bucle interactivo.
+ */
 int	main(int ac, char *av[], char *envp[])
 {
 	t_env	*envlist;
@@ -27,7 +27,6 @@ int	main(int ac, char *av[], char *envp[])
 	if (ac != 1)
 	{
 		write(STDERR_FILENO, "minishell: incorrect arguments\n", 31);
-		set_exit_status(EXIT_FAILURE);
 		cleaner_envlist(&envlist);
 		return (EXIT_FAILURE);
 	}

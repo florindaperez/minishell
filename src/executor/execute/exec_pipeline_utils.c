@@ -83,39 +83,3 @@ bool	handle_pipeline_preliminaries(t_cmd_exe *cmds, t_data_env_exe *data)
 	}
 	return (true);
 }
-
-/*
-* wait_for_all_children
-*
-* Espera a que todos los procesos hijos terminen.
-* Primero, espera de forma bloqueante al último proceso del pipeline
-* para obtener su estado de salida. Luego, entra en un bucle para
-* recoger (reap) a todos los demás hijos que pudieran haber quedado
-* como zombies, manejando las interrupciones por señales.
-*/
-int	wait_for_all_children(pid_t last_pid)
-{
-	int		status;
-	int		exit_code;
-	pid_t	waited_pid;
-
-	exit_code = EXIT_SUCCESS;
-	if (last_pid > 0)
-	{
-		waitpid(last_pid, &status, 0);
-		if (WIFEXITED(status))
-			exit_code = WEXITSTATUS(status);
-		else if (WIFSIGNALED(status))
-			exit_code = 128 + WTERMSIG(status);
-	}
-	while (1)
-	{
-		waited_pid = wait(NULL);
-		if (waited_pid == -1)
-		{
-			if (errno == ECHILD || errno == EINTR)
-				break ;
-		}
-	}
-	return (exit_code);
-}

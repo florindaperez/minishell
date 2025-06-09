@@ -17,7 +17,7 @@ NAME =	minishell
 GCC := cc
 
 # Compiler flags
-FLAGS := -Wall -Werror -Wextra -MMD -g
+FLAGS := -Wall -Werror -Wextra -MMD -g -fsanitize=address
 
 # Remove
 RM 	:=	rm -rf
@@ -152,6 +152,7 @@ FILES = \
     executor/execute/exec_child_utils.c \
     executor/execute/exec_pipeline.c \
     executor/execute/exec_pipeline_utils.c \
+	executor/execute/exec_wait.c \
     executor/execute/exec_redirects.c \
     executor/execute/exec_utils.c \
     executor/execute/find_path.c \

@@ -52,6 +52,7 @@ static void	child_exec_logic(t_cmd_exe *cmd, t_data_env_exe *data,
 	int	out_fd;
 	int	in_fd;
 
+	signals_default_for_child();
 	in_fd = *(p_state->prev_pipe_read_fd_ptr);
 	out_fd = -1;
 	if (p_state->is_next_command)
@@ -141,10 +142,8 @@ void	execute_pipeline(t_cmd_exe *cmds, t_data_env_exe *data)
 	p_state.current_pipe_fds[1] = -1;
 	p_state.is_next_command = false;
 	if (!handle_pipeline_preliminaries(cmds, data))
-	{
 		return ;
-	}
-	signals_noninteractive();
+	signals_during_execution();
 	exec_cmd_loop_and_set_status(cmds, data, &p_state);
 	signals_interactive();
 }

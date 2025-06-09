@@ -266,8 +266,9 @@ int		is_builtins(t_cmd *cmd);
 bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
 void	*p_malloc(size_t size);
 
-void	signals_noninteractive(void);
 void	signals_interactive(void);
+void	signals_during_execution(void);
+void	signals_default_for_child(void);
 
 /*-------------------exit_status------Manejamos msg_error y $?------------*/
 int		get_exit_status_len(void);
