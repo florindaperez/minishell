@@ -60,13 +60,16 @@ static void	expand_redirections(t_cmd *cmd, t_env *envlist)
 	redir_aux = cmd->redir;
 	while (redir_aux)
 	{
-		if (ft_strchr(redir_aux->fname, '$') != NULL \
-			|| ft_strchr(redir_aux->fname, '\'') != NULL \
-			|| ft_strchr(redir_aux->fname, '"') != NULL)
+		if (redir_aux->redir_type != HEREDOC_INPUT)
 		{
-			exp_str = expander(redir_aux->fname, envlist);
-			free(redir_aux->fname);
-			redir_aux->fname = exp_str;
+			if (ft_strchr(redir_aux->fname, '$') != NULL \
+				|| ft_strchr(redir_aux->fname, '\'') != NULL \
+				|| ft_strchr(redir_aux->fname, '"') != NULL)
+			{
+				exp_str = expander(redir_aux->fname, envlist);
+				free(redir_aux->fname);
+				redir_aux->fname = exp_str;
+			}
 		}
 		redir_aux = redir_aux->next;
 	}
