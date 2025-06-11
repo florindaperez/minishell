@@ -90,12 +90,19 @@ static char	*generate_line(void)
 * minishell
 * Declara 'data' aquí para que sea persistente.
 * El bucle ahora puede terminar para permitir la limpieza final.
+* isatty(STDIN_FILENO), es if es para impedir la entrada:
+* ./minishell < /dev/ramdon
 */
 void	minishell(t_env *envlist_main)
 {
 	t_data_env_exe	data;
 	char			*line_input;
 
+	if (!isatty(STDIN_FILENO))
+	{
+		write(2, "Error: El modo no interactivo no está permitido.\n", 49);
+		exit(EXIT_FAILURE);
+	}
 	ft_memset(&data, 0, sizeof(t_data_env_exe));
 	data.shell_env_list_ptr = &envlist_main;
 	while (1)
