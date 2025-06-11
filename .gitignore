@@ -3,19 +3,21 @@
 
 # Ignorar archivos de dependencias
 *.d
+.dep
 
 # Ignorar directorios de compilación (como el de la carpeta obj)
 /obj/
+.objs
 
 #Ignorar los archivos tmp .swp 
 *.swp
 
 #Ignorar ejecutables y .a
-
 *.a
 *.out
 *.txt
 *.sh
+minishell
 
 .objs_coverage/
 .dep_coverage/
@@ -28,4 +30,5 @@ minitester-minishell-tester/
 tester_builtin_echo_pwd.sh
 tester_builtin_export_unset_env.sh
 
+.vscode
 

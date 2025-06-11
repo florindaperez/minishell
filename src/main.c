@@ -6,16 +6,17 @@
 /*   By: jocuni-p <jocuni-p@student.42barcelona.com +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/05 17:55:12 by castorga          #+#    #+#             */
-/*   Updated: 2025/06/04 21:24:36 by flperez-         ###   ########.fr       */
+/*   Updated: 2025/06/10 12:48:37 by jocuni-p         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "minishell.h"
 
 int	g_get_signal = 0;
 
 /*
  *  Punto de entrada principal de minishell.
- * Inicializa el entorno y llama al bucle interactivo.
+ * Pone en escuchaInicializa el entorno y llama al bucle interactivo.
  */
 int	main(int ac, char *av[], char *envp[])
 {
