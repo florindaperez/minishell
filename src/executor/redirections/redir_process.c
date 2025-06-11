@@ -14,21 +14,17 @@
 #include "minishell_executor.h"
 
 /*
- * Abre un archivo de salida especificado en io->outfile con las banderas
- * y modo proporcionados. Esta función se centra únicamente en la operación
- * de apertura y el manejo de su error inmediato. No realiza la duplicación
- * del descriptor de archivo.
- * Es una función auxiliar para open_and_dup_outfile, extraída para ayudar
- * a cumplir con las restricciones de longitud de línea de norminette.
+ * open_outfile_for_redir
+ * Realiza la llamada 'open' para un fichero de salida, usando las banderas
+ * y modo especificados. Centraliza la apertura y el manejo de errores
+ * inmediatos de esta operación.
  *
- * @param io Puntero a la estructura t_cmd_io_exe que contiene el nombre
- * del archivo de salida (io->outfile).
- * @param cmd_name_for_err Nombre del comando actual, para usar en mensajes
- * de error.
- * @param open_flags Banderas para la función open (ej. O_WRONLY | O_CREAT).
- * @param mode Modo de creación del archivo si O_CREAT está en open_flags.
- * @return El descriptor de archivo del archivo abierto en caso de éxito.
- * -1 en caso de error en la apertura (y establece g_get_signal en 1).
+ * io:               Puntero a la estructura de E/S con el nombre del fichero.
+ * cmd_name_for_err: Nombre del comando actual, para mensajes de error.
+ * open_flags:       Banderas para la función 'open' (ej. O_WRONLY).
+ * mode:             Modo de creación del fichero si se usa O_CREAT.
+ *
+ * Retorna: El descriptor del fichero abierto, o -1 si 'open' falla.
  */
 static int	open_outfile_for_redir(t_cmd_io_exe *io, char *cmd_name_for_err,
 	int open_flags, mode_t mode)
@@ -50,22 +46,18 @@ static int	open_outfile_for_redir(t_cmd_io_exe *io, char *cmd_name_for_err,
 }
 
 /*
- * Gestiona la apertura y duplicación de un archivo de salida.
- * Primero, asegura que la ruta del directorio para el archivo de salida exista
- * (llamando a redir_create_path_if_needed). Luego, determina las banderas
- * de apertura correctas (O_APPEND si io->append_mode es true, o O_TRUNC
- * en caso contrario). Abre el archivo usando la función auxiliar
- * open_outfile_for_redir. Si la apertura es exitosa, el descriptor
- * obtenido se almacena en io->fd_out y se duplica a STDOUT_FILENO.
- * Maneja errores en cada paso.
+ * open_and_dup_outfile
+ * Orquesta la redirección de salida a un fichero. Asegura que la ruta del
+ * directorio exista, determina las banderas de apertura (truncar o añadir),
+ * abre el fichero y duplica su descriptor a STDOUT_FILENO.
  *
- * @param io Puntero a la estructura t_cmd_io_exe que contiene la información
- * de la redirección de salida (outfile, append_mode, fd_out).
- * @param cmd_name_for_err Nombre del comando actual para mensajes de error.
- * @param mode Modo de creación del archivo si este no existe.
- * @return true si todas las operaciones (creación de path, apertura, dup2)
- * son exitosas.
- * false si alguna operación falla (y establece g_get_signal en 1).
+ * io:               Puntero a la estructura de E/S con la información de la
+ * redirección.
+ * cmd_name_for_err: Nombre del comando para mensajes de error.
+ * mode:             Modo de creación del fichero si no existe.
+ *
+ * Retorna: 'true' si todas las operaciones son exitosas, 'false' si alguna
+ * falla.
  */
 static bool	open_and_dup_outfile(t_cmd_io_exe *io, char *cmd_name_for_err,
 	mode_t mode)
@@ -94,24 +86,17 @@ static bool	open_and_dup_outfile(t_cmd_io_exe *io, char *cmd_name_for_err,
 }
 
 /*
- * Gestiona la redirección de la entrada estándar (STDIN_FILENO) para un comando.
- * Si io->fd_in ya tiene un descriptor de archivo válido (distinto de -1),
- * este se duplica directamente a STDIN_FILENO. Esto ocurre, por ejemplo,
- * cuando la entrada proviene de un pipe.
- * Si io->fd_in es -1 pero io->infile está definido, significa que la entrada
- * debe leerse de un archivo. En este caso, se llama a la función
- * open_and_dup_infile (que se asume definida en otro lugar) para que abra
- * el archivo especificado en io->infile y duplique su descriptor a STDIN_FILENO.
+ * redir_handle_input
+ * Gestiona la redirección de la entrada estándar (STDIN_FILENO). Decide si
+ * usar un descriptor de fichero ya existente (de un pipe) o si abrir un
+ * nuevo fichero (de una redirección '<').
  *
- * @param cmd Puntero al comando actual (t_cmd_exe). No se usa directamente
- * en esta versión de la función, pero se mantiene por consistencia
- * con la firma original o por si se necesitara en el futuro.
- * @param io Puntero a la estructura t_cmd_io_exe que contiene la información
- * de la redirección de entrada (fd_in, infile).
- * @param cmd_name_for_err Nombre del comando actual para mensajes de error.
- * @return true si la redirección de entrada se configura correctamente.
- * false si ocurre un error (ej. fallo en dup2 o en open_and_dup_infile),
- * y establece g_get_signal en 1.
+ * cmd:              El comando actual (no usado directamente en esta versión).
+ * io:               La estructura de E/S con la información de entrada.
+ * cmd_name_for_err: Nombre del comando para mensajes de error.
+ *
+ * Retorna: 'true' si la redirección de entrada se configura correctamente,
+ * 'false' en caso de error.
  */
 bool	redir_handle_input(t_cmd_exe *cmd, t_cmd_io_exe *io, \
 							char *cmd_name_for_err)
@@ -137,17 +122,14 @@ bool	redir_handle_input(t_cmd_exe *cmd, t_cmd_io_exe *io, \
 }
 
 /*
- * Función auxiliar estática para manejar la duplicación de un descriptor
- * de archivo de salida (io->fd_out) que ya ha sido abierto o establecido
- * previamente (por ejemplo, el extremo de escritura de un pipe).
- * Duplica io->fd_out a STDOUT_FILENO.
+ * handle_existing_redir_out_fd
+ * Duplica un descriptor de fichero de salida ya existente (ej. de un pipe)
+ * a STDOUT_FILENO. Es una función auxiliar para 'redir_handle_output'.
  *
- * @param io Puntero a la estructura t_cmd_io_exe que contiene el descriptor
- * de archivo de salida (io->fd_out) y opcionalmente el nombre
- * del archivo de salida (io->outfile) para mensajes de error.
- * @param cmd_name_for_err Nombre del comando actual para mensajes de error.
- * @return true si dup2 tiene éxito.
- * false si dup2 falla (y establece g_get_signal en 1).
+ * io:               La estructura de E/S que contiene el 'fd_out'.
+ * cmd_name_for_err: Nombre del comando para mensajes de error.
+ *
+ * Retorna: 'true' si 'dup2' tiene éxito, 'false' si falla.
  */
 static bool	handle_existing_redir_out_fd(t_cmd_io_exe *io, \
 										char *cmd_name_for_err)
@@ -168,23 +150,17 @@ static bool	handle_existing_redir_out_fd(t_cmd_io_exe *io, \
 }
 
 /*
- * Gestiona la redirección de la salida estándar (STDOUT_FILENO) para un comando.
- * Si io->fd_out ya tiene un descriptor de archivo válido (distinto de -1),
- * se llama a handle_existing_redir_out_fd para duplicarlo a STDOUT_FILENO.
- * Esto ocurre, por ejemplo, cuando la salida se dirige a un pipe.
- * Si io->fd_out es -1 pero io->outfile está definido, significa que la salida
- * debe escribirse en un archivo. En este caso, se llama a la función
- * open_and_dup_outfile para que cree/abra el archivo especificado en
- * io->outfile (considerando el modo de apendizaje io->append_mode) y
- * duplique su descriptor a STDOUT_FILENO.
+ * redir_handle_output
+ * Gestiona la redirección de la salida estándar (STDOUT_FILENO). Decide si
+ * usar un descriptor ya existente (de un pipe) o si abrir/crear un nuevo
+ * fichero (de una redirección '>' o '>>').
  *
- * @param cmd Puntero al comando actual (t_cmd_exe). No se usa directamente
- * en esta versión de la función.
- * @param io Puntero a la estructura t_cmd_io_exe que contiene la información
- * de la redirección de salida (fd_out, outfile, append_mode).
- * @param cmd_name_for_err Nombre del comando actual para mensajes de error.
- * @return true si la redirección de salida se configura correctamente.
- * false si ocurre un error (y establece g_get_signal en 1).
+ * cmd:              El comando actual (no usado directamente en esta versión).
+ * io:               La estructura de E/S con la información de salida.
+ * cmd_name_for_err: Nombre del comando para mensajes de error.
+ *
+ * Retorna: 'true' si la redirección de salida se configura correctamente,
+ * 'false' en caso de error.
  */
 bool	redir_handle_output(t_cmd_exe *cmd, t_cmd_io_exe *io, \
 							char *cmd_name_for_err)

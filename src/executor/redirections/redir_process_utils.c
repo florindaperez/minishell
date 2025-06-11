@@ -12,9 +12,17 @@
 
 #include "minishell.h"
 #include "minishell_executor.h"
+
 /*
- * Restaura STDIN_FILENO y/o STDOUT_FILENO desde sus copias de seguridad
- * si existen, según el modo especificado.
+ * redir_restore_fds_on_fail
+ * Restaura los descriptores de fichero estándar (stdin y/o stdout) a partir
+ * de sus copias de seguridad. Se utiliza para revertir redirecciones en
+ * caso de que ocurra un error a mitad de una operación de E/S.
+ *
+ * io:   La estructura de E/S que contiene los descriptores de fichero de
+ * respaldo.
+ * mode: Un 't_restore_mode_exe' que especifica si se debe restaurar stdin,
+ * stdout, o ambos.
  */
 void	redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode_exe mode)
 {
@@ -41,9 +49,18 @@ void	redir_restore_fds_on_fail(t_cmd_io_exe *io, t_restore_mode_exe mode)
 }
 
 /*
- * Abre el archivo especificado en io->infile (para '<') y duplica
- * su descriptor de fichero a STDIN_FILENO. Mantiene la lógica original.
- * (Función movida de redir_process.c)
+ * open_and_dup_infile
+ * Gestiona la redirección de entrada ('<'). Abre el fichero especificado
+ * en 'io->infile' y duplica su descriptor de fichero a la entrada estándar
+ * (STDIN_FILENO) del proceso actual.
+ *
+ * io:               La estructura de E/S que contiene el nombre del fichero de
+ * entrada ('infile').
+ * cmd_name_for_err: El nombre del comando actual, para usarlo en mensajes
+ * de error más descriptivos.
+ *
+ * Retorna: 'true' si la apertura y la redirección son exitosas, 'false' en
+ * caso de cualquier error.
  */
 bool	open_and_dup_infile(t_cmd_io_exe *io, char *cmd_name_for_err)
 {

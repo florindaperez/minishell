@@ -14,20 +14,12 @@
 
 /*
  * init_and_convert_data
- * Inicializa la estructura de datos del ejecutor y convierte las listas
- * de comandos y entorno a los formatos requeridos para la ejecución.
- *
- * cmd_list: Cabeza de la lista de comandos (t_cmd *) del parseador.
- * envlist_ptr: Puntero al puntero de la lista de entorno principal.
- * data: Puntero a la estructura de datos del ejecutor (t_data_env_exe *).
- *
- * Retorna: 0 en éxito, 1 si hay un error de traducción o conversión.
+ * Prepara los datos para la ejecución del pipeline actual.
+ * NO inicializa toda la estructura, solo los datos del comando actual.
+ * Asume que 'data->shell_env_list_ptr' ya está configurado.
  */
-static int	init_and_convert_data(t_cmd *cmd_list, t_env **envlist_ptr,
-				t_data_env_exe *data)
+static int	init_and_convert_data(t_cmd *cmd_list, t_data_env_exe *data)
 {
-	ft_memset(data, 0, sizeof(t_data_env_exe));
-	data->shell_env_list_ptr = envlist_ptr;
 	data->last_exit_status = g_get_signal;
 	data->cmds_head = convert_cmd_list_to_cms_list_exec(cmd_list);
 	if (data->cmds_head == NULL && cmd_list != NULL)
@@ -35,9 +27,11 @@ static int	init_and_convert_data(t_cmd *cmd_list, t_env **envlist_ptr,
 		write(2, "minishell: Error during command translation\n", 44);
 		return (1);
 	}
+	if (data->env_for_execve)
+		free_arr2d(data->env_for_execve);
 	if (data->shell_env_list_ptr && *(data->shell_env_list_ptr))
-		data->env_for_execve
-			= convert_env_list_to_exec_envp(*(data->shell_env_list_ptr));
+		data->env_for_execve = \
+			convert_env_list_to_exec_envp(*(data->shell_env_list_ptr));
 	else
 		data->env_for_execve = NULL;
 	if (!data->env_for_execve && data->shell_env_list_ptr
@@ -51,10 +45,8 @@ static int	init_and_convert_data(t_cmd *cmd_list, t_env **envlist_ptr,
 
 /*
  * cleanup_exec_data
- * Libera la memoria alocada para las estructuras de comandos del ejecutor
- * y el array de entorno para execve.
- *
- * data: Puntero a la estructura de datos del ejecutor (t_data_env_exe *).
+ * Libera la memoria temporal alocada para un pipeline.
+ * NO libera pwd, old_pwd ni la lista de entorno principal.
  */
 static void	cleanup_exec_data(t_data_env_exe *data)
 {
@@ -63,25 +55,18 @@ static void	cleanup_exec_data(t_data_env_exe *data)
 		free_cmd_list(data->cmds_head);
 		data->cmds_head = NULL;
 	}
-	if (data->env_for_execve)
-	{
-		free_arr2d(data->env_for_execve);
-		data->env_for_execve = NULL;
-	}
 }
 
 /*
  * execute_pipeline_logic
  * Prepara y ejecuta el pipeline de comandos.
- *
- * cmd_list: Cabeza de la lista de comandos (t_cmd *) parseados.
- * envlist_ptr: Puntero al puntero de la cabeza de la lista de entorno principal.
- * data: Puntero a la estructura de datos del ejecutor (t_data_env_exe *).
+ * 'data' es ahora un puntero a una estructura persistente.
+ * Por problemas de leaks se pasa a declarar envlist_ptr una sola vez en
+ * data
  */
-void	execute_pipeline_logic(t_cmd *cmd_list, t_env **envlist_ptr,
-			t_data_env_exe *data)
+void	execute_pipeline_logic(t_cmd *cmd_list, t_data_env_exe *data)
 {
-	if (init_and_convert_data(cmd_list, envlist_ptr, data) != 0)
+	if (init_and_convert_data(cmd_list, data) != 0)
 	{
 		cleanup_exec_data(data);
 		return ;

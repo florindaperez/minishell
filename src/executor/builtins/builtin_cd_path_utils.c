@@ -11,12 +11,20 @@
 /* ************************************************************************** */
 
 #include "minishell.h"
-#include "minishell_executor.h" 
+#include "minishell_executor.h"
 
 /*
-* char *build_cd_fallback_path(t_data_env_exe *data, char *path_arg)
-* (Tu implementación de build_fallback_path renombrada y hecha no estática)
-*/
+ * build_cd_fallback_path
+ * Construye una ruta absoluta para 'cd' como método de respaldo cuando
+ * 'getcwd' falla. Lo hace uniendo manualmente la variable PWD almacenada
+ * con el argumento de ruta relativo proporcionado.
+ *
+ * data:     La estructura de datos del ejecutor que contiene la variable PWD.
+ * path_arg: El argumento de ruta original pasado al comando 'cd'.
+ *
+ * Retorna: Una nueva cadena de caracteres con la ruta absoluta construida,
+ * o NULL si falla la asignación de memoria.
+ */
 static char	*build_cd_fallback_path(t_data_env_exe *data, char *path_arg)
 {
 	char	*new_abs_p;
@@ -42,9 +50,19 @@ static char	*build_cd_fallback_path(t_data_env_exe *data, char *path_arg)
 }
 
 /*
-* char *get_cd_current_abs_path(t_data_env_exe *data, char *path_arg)
-* (Tu implementación de get_current_abs_path renombrada y hecha no estática)
-*/
+ * get_cd_current_abs_path
+ * Obtiene la ruta de trabajo absoluta actual, principalmente después de un
+ * cambio de directorio exitoso. Intenta usar 'getcwd' como método primario
+ * y recurre a 'build_cd_fallback_path' si 'getcwd' falla.
+ *
+ * data:     La estructura de datos del ejecutor, para pasarla a la función
+ * de respaldo si es necesario.
+ * path_arg: El argumento de ruta original de 'cd', para la función de
+ * respaldo.
+ *
+ * Retorna: Una nueva cadena de caracteres con la ruta absoluta, o NULL si
+ * ambos métodos, el primario y el de respaldo, fallan.
+ */
 char	*get_cd_current_abs_path(t_data_env_exe *data, char *path_arg)
 {
 	char	cwd_buffer[PATH_SIZE];

@@ -266,9 +266,11 @@ int		is_builtins(t_cmd *cmd);
 bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
 void	*p_malloc(size_t size);
 
+/* --- SEÑALES --- */
 void	signals_interactive(void);
-void	signals_during_execution(void);
-void	signals_default_for_child(void);
+void	signals_heredoc(void);
+void	signals_execution(void);
+void	signals_child_default(void);
 
 /*-------------------exit_status------Manejamos msg_error y $?------------*/
 int		get_exit_status_len(void);
@@ -294,5 +296,9 @@ int		msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);
 
 /*-------------------heredoc-------------------*/
 int		heredoc(t_cmd *cmd, t_list **heredoc_tmp_f);
+/* --- HEREDOC UTILS (PROTOTIPOS AÑADIDOS) --- */
+void	msg_error_heredoc(char *delimiter);
+int		create_tmp_file(char **filename_ptr);
+void	add_heredoc_tmp_f(t_list **list, char *filename);
 
 #endif

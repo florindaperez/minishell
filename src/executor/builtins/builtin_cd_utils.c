@@ -12,10 +12,18 @@
 
 #include "minishell.h"
 #include "minishell_executor.h"
+
 /*
-* static bool	report_cd_error(char *path)
-* Informa error de chdir y establece estado de salida.
-*/
+ * report_cd_error
+ * Informa de un error ocurrido durante la llamada al sistema 'chdir'.
+ * Normaliza ciertos errores (ESTALE a ENOENT) para mensajes más claros y
+ * establece el estado de salida global a fallo.
+ *
+ * path: La ruta que no se pudo cambiar, para incluirla en el mensaje de error.
+ *
+ * Retorna: Siempre 'false', para ser usado convenientemente en la función que
+ * lo llama para indicar un fallo en la operación.
+ */
 static bool	report_cd_error(char *path)
 {
 	if (errno == ESTALE)
@@ -26,9 +34,18 @@ static bool	report_cd_error(char *path)
 }
 
 /*
-* bool	perform_directory_change(t_data_env_exe *data, char *path)
-* (Tu implementación, ahora llamando a las funciones no estáticas de otros utils)
-*/
+ * perform_directory_change
+ * Realiza el cambio de directorio de trabajo. Esta función orquesta la
+ * llamada a 'chdir', la obtención de la nueva ruta absoluta y la
+ * actualización de las variables de entorno PWD y OLDPWD.
+ *
+ * data: La estructura de datos del ejecutor que contiene las variables de
+ * entorno a actualizar.
+ * path: La ruta del directorio al que se desea cambiar.
+ *
+ * Retorna: 'true' si el cambio de directorio y la actualización del entorno
+ * fueron exitosos, 'false' si alguna de las operaciones falla.
+ */
 bool	perform_directory_change(t_data_env_exe *data, char *path)
 {
 	char	*new_abs_path;

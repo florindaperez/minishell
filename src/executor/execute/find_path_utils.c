@@ -14,10 +14,16 @@
 #include "minishell_executor.h"
 
 /*
-* Une dos componentes de ruta con un '/'.
-* Maneja el caso donde s1 ya termina con '/'.
-* Devuelve una nueva cadena alocada, o NULL si falla malloc.
-*/
+ * ft_strjoin_path
+ * Une dos componentes de una ruta con un único separador '/'. Se asegura de
+ * no duplicar el separador si el primer componente ya termina con uno.
+ *
+ * s1: El primer componente de la ruta (ej: /usr/bin).
+ * s2: El segundo componente de la ruta (ej: ls).
+ *
+ * Retorna: Una nueva cadena de caracteres que representa la ruta completa
+ * (ej: /usr/bin/ls), o NULL si falla la asignación de memoria.
+ */
 char	*ft_strjoin_path(char const *s1, char const *s2)
 {
 	char	*result;
@@ -46,10 +52,17 @@ char	*ft_strjoin_path(char const *s1, char const *s2)
 }
 
 /*
-* Realiza validaciones básicas sobre el nombre del comando.
-* Establece cmd_name_out si la validación es exitosa.
-* Imprime mensajes de error y devuelve false si falla.
-*/
+ * validate_basic_cmd_input
+ * Realiza validaciones iniciales sobre el nombre de un comando antes de
+ * intentar buscar su ruta. Comprueba casos nulos, vacíos o especiales como '.'.
+ *
+ * cmd:          El nodo del comando que se va a validar.
+ * cmd_name_out: Puntero a un (char *) que se establecerá para apuntar al
+ * nombre del comando si la validación es exitosa.
+ *
+ * Retorna: 'true' si el comando pasa las validaciones básicas, 'false' si se
+ * encuentra un error.
+ */
 bool	validate_basic_cmd_input(t_cmd_exe *cmd, char **cmd_name_out)
 {
 	if (!cmd || !cmd->args || !cmd->args[0] || !cmd->args[0]->value)
@@ -73,22 +86,17 @@ bool	validate_basic_cmd_input(t_cmd_exe *cmd, char **cmd_name_out)
 }
 
 /*
-* Contiene la lógica principal de búsqueda de ruta (explícita, PATH, caso "..").
-* Esta función llamaría a las funciones estáticas de find_path.c o
-* necesitaría que esa lógica se pase aquí. Para este ejemplo,
-* la función find_command_path en find_path.c se encargará de orquestar
-* las llamadas a sus propias funciones estáticas basado en esta lógica.
-* Esta función (search_and_set_cmd_path) es conceptual para mostrar la división.
-* En la práctica, su lógica se integrará en find_command_path de forma más 
-* directa si las auxiliares estáticas de find_path.c se mantienen allí.
-* Para simplificar y mantener find_path.c con sus 5 funciones, la siguiente
-* `handle_path_search_error` es la función clave que se externaliza.
-*/
-
-/*
-* Maneja los diferentes estados de error de la búsqueda de path,
-* emitiendo el mensaje apropiado.
-*/
+ * handle_path_search_error
+ * Centraliza el manejo de errores que pueden ocurrir durante la búsqueda de la
+ * ruta de un comando. Imprime un mensaje de error apropiado según el estado
+ * de error proporcionado.
+ *
+ * status:   El código de estado que indica el tipo de error de la búsqueda.
+ * cmd_name: El nombre del comando que causó el error, para incluirlo en el
+ * mensaje.
+ * data:     La estructura de datos del ejecutor, usada para verificar la
+ * existencia de la variable PATH.
+ */
 void	handle_path_search_error(t_path_status status, \
 									const char *cmd_name, \
 									t_data_env_exe *data)

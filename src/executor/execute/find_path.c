@@ -12,16 +12,18 @@
 
 #include "minishell.h"
 #include "minishell_executor.h"
-#include <errno.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 /*
-* Valida si 'full_path' es un archivo ejecutable accesible.
-* No asigna cmd->path. No llama a msg_error_cmd ni set_exit_status.
-* Devuelve un t_path_status detallando el resultado.
-*/
+ * validate_path_access
+ * Valida si una ruta completa ('full_path') corresponde a un fichero
+ * ejecutable y accesible. No modifica el comando ni muestra errores.
+ *
+ * full_path: La ruta completa del fichero a validar.
+ *
+ * Retorna: Un estado 't_path_status' que detalla el resultado: si se
+ * encontró y es ejecutable, si es un directorio, si no existe, si hay
+ * problemas de permisos, o si falló la llamada a 'stat'.
+ */
 static t_path_status	validate_path_access(const char *full_path)
 {
 	struct stat	statbuf;
@@ -50,10 +52,16 @@ static t_path_status	validate_path_access(const char *full_path)
 }
 
 /*
-* Intenta procesar 'cmd_name' como una ruta explícita (si contiene '/').
-* Si es válida y ejecutable, asigna cmd->path.
-* Devuelve un t_path_status.
-*/
+ * attempt_explicit_path
+ * Intenta procesar el nombre de un comando como una ruta explícita (si
+ * contiene '/'). Si la ruta es válida y ejecutable, actualiza 'cmd->path'.
+ *
+ * cmd:      El comando cuyo 'path' se actualizará si la ruta es válida.
+ * cmd_name: El nombre del comando, que se evalúa como una ruta.
+ *
+ * Retorna: Un estado 't_path_status' indicando el resultado. Si no contiene
+ * '/', retorna 'PATH_NOT_EXPLICIT' para que se intente otra estrategia.
+ */
 static t_path_status	attempt_explicit_path(t_cmd_exe *cmd, \
 											const char *cmd_name)
 {
@@ -74,9 +82,16 @@ static t_path_status	attempt_explicit_path(t_cmd_exe *cmd, \
 }
 
 /*
-* Construye y valida una ruta para un comando en un directorio específico.
-* Si es ejecutable, actualiza cmd->path.
-*/
+ * check_dir_for_cmd
+ * Construye y valida una ruta completa para un comando dentro de un
+ * directorio específico. Si es ejecutable, actualiza 'cmd->path'.
+ *
+ * dir:      El directorio en el que se buscará el comando.
+ * cmd_name: El nombre del comando a buscar.
+ * cmd:      El comando cuyo 'path' se actualizará si se encuentra.
+ *
+ * Retorna: Un 't_path_status' con el resultado de la validación.
+ */
 static t_path_status	check_dir_for_cmd(const char *dir, \
 										const char *cmd_name, \
 										t_cmd_exe *cmd)
@@ -106,10 +121,17 @@ static t_path_status	check_dir_for_cmd(const char *dir, \
 }
 
 /*
-* Busca 'cmd_name' en los directorios de la variable PATH.
-* Si encuentra un ejecutable válido, asigna cmd->path.
-* Devuelve t_path_status.
-*/
+ * attempt_path_env_search
+ * Busca un comando recorriendo los directorios listados en la variable de
+ * entorno PATH. Si encuentra un ejecutable válido, actualiza 'cmd->path'.
+ *
+ * cmd:      El comando cuyo 'path' se actualizará si se encuentra.
+ * cmd_name: El nombre del comando a buscar en los directorios del PATH.
+ * data:     La estructura de datos del ejecutor para acceder al entorno.
+ *
+ * Retorna: 'PATH_FOUND_EXECUTABLE' si se encuentra, o un estado de error
+ * si no se encuentra o si ocurre un fallo de memoria.
+ */
 static t_path_status	attempt_path_env_search(t_cmd_exe *cmd, \
 												const char *cmd_name, \
 												t_data_env_exe *data)
@@ -142,11 +164,19 @@ static t_path_status	attempt_path_env_search(t_cmd_exe *cmd, \
 }
 
 /*
-* Busca la ruta ejecutable de un comando.
-* Orquesta la validación, búsqueda explícita y búsqueda en PATH.
-* Delega la validacion en validate_basic_cmd_input y los mensajes de 
-* error en =>  handle_path_search_erro.
-*/
+ * find_command_path
+ * Orquesta la búsqueda de la ruta ejecutable para un comando. Sigue el orden
+ * de búsqueda estándar: validación básica, ruta explícita, y finalmente
+ * búsqueda en los directorios de la variable PATH.
+ *
+ * cmd:  El comando para el cual se busca la ruta. El campo 'cmd->path' será
+ * actualizado si se encuentra una ruta válida.
+ * data: La estructura de datos del ejecutor que contiene el entorno.
+ *
+ * Retorna: 'true' si se encuentra una ruta ejecutable, 'false' en caso
+ * contrario. En caso de fallo, delega la impresión de errores a
+ * 'handle_path_search_error'.
+ */
 bool	find_command_path(t_cmd_exe *cmd, t_data_env_exe *data)
 {
 	char			*cmd_name_str;

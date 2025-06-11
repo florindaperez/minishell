@@ -13,6 +13,15 @@
 #include "minishell.h"
 #include "minishell_executor.h"
 
+/*
+ * count_args
+ * Cuenta el número de elementos en un array de estructuras t_arg_info_exe.
+ * El array debe estar terminado en NULL.
+ *
+ * args: El array de punteros a t_arg_info_exe que se va a contar.
+ *
+ * Retorna: El número de argumentos en el array.
+ */
 static int	count_args(t_arg_info_exe **args)
 {
 	int	count;
@@ -26,6 +35,17 @@ static int	count_args(t_arg_info_exe **args)
 	return (count);
 }
 
+/*
+ * free_argv_on_strdup_error
+ * Libera la memoria de un array 'argv' parcialmente construido cuando
+ * una llamada a ft_strdup falla. Libera cada cadena individualmente
+ * y luego el propio array.
+ *
+ * argv: El array parcialmente lleno que necesita ser liberado.
+ * k:    El índice hasta el cual el array fue llenado antes del error.
+ *
+ * Retorna: Siempre NULL, para ser usado como valor de retorno de error.
+ */
 static char	**free_argv_on_strdup_error(char **argv, int k)
 {
 	msg_error_cmd("exec", "strdup failed building argv", strerror(errno), 1);
@@ -39,6 +59,14 @@ static char	**free_argv_on_strdup_error(char **argv, int k)
 	return (NULL);
 }
 
+/*
+ * build_empty_argv
+ * Crea un array de argumentos (argv) válido pero vacío. Un argv válido
+ * debe ser un puntero a un array que contiene un único puntero NULL.
+ *
+ * Retorna: Un puntero a un array argv vacío y terminado en NULL, o NULL si
+ * falla la asignación de memoria.
+ */
 static char	**build_empty_argv(void)
 {
 	char	**argv;
@@ -56,8 +84,16 @@ static char	**build_empty_argv(void)
 }
 
 /*
- * Rellena el array argv con cadenas duplicadas de args_info.
- * Retorna true si tiene éxito, false si falla un strdup (y libera argv).
+ * fill_argv_array
+ * Rellena un array argv preasignado con cadenas duplicadas de un array de
+ * estructuras t_arg_info_exe.
+ *
+ * argv:      El array de cadenas (char **) de destino.
+ * args_info: El array de origen de estructuras t_arg_info_exe.
+ * argc:      El número de argumentos a duplicar.
+ *
+ * Retorna: 'true' si todas las cadenas se duplicaron con éxito, 'false' si
+ * alguna duplicación falla (en cuyo caso, la memoria se libera).
  */
 static bool	fill_argv_array(char **argv, t_arg_info_exe **args_info,
 								int argc)
@@ -83,9 +119,15 @@ static bool	fill_argv_array(char **argv, t_arg_info_exe **args_info,
 }
 
 /*
- * Construye un array argv (char**) a partir de la estructura t_arg_info**.
- * Duplica las cadenas usando ft_strdup.
- * El array devuelto debe ser liberado con free_str_tab.
+ * build_argv_from_args
+ * Construye un array de cadenas de tipo argv (char **) a partir de la
+ * estructura de argumentos del ejecutor (t_arg_info_exe **). El array
+ * resultante es adecuado para ser usado con 'execve'.
+ *
+ * args: El array de estructuras de argumentos del ejecutor.
+ *
+ * Retorna: Un nuevo array argv terminado en NULL que debe ser liberado por
+ * el llamador, o NULL si ocurre un error de asignación de memoria.
  */
 char	**build_argv_from_args(t_arg_info_exe **args)
 {

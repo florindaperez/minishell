@@ -13,19 +13,15 @@
 #include "minishell.h"
 
 /*
-** signal_reset_prompt
-** -------------------
-** Descripción:
-** Manejador para la señal SIGINT (Ctrl+C) en modo interactivo.
-** Establece una variable global a 130, imprime una nueva línea y reinicia
-** el prompt de readline para una nueva entrada de usuario.
-**
-** Parámetros:
-** - int signal_num: El número de la señal recibida (no se utiliza).
-*/
-static void	signal_reset_prompt(int signal_num)
+ * signal_handler_interactive
+ * Manejador de señal para SIGINT (Ctrl+C) en modo interactivo.
+ * Muestra una nueva línea, limpia la línea de readline y la vuelve a mostrar.
+ *
+ * sig: El número de la señal recibida (no se usa directamente).
+ */
+static void	signal_handler_interactive(int sig)
 {
-	(void)signal_num;
+	(void)sig;
 	g_get_signal = 130;
 	write(STDOUT_FILENO, "\n", 1);
 	rl_on_new_line();
@@ -34,14 +30,11 @@ static void	signal_reset_prompt(int signal_num)
 }
 
 /*
-** signals_interactive
-** -------------------
-** Descripción:
-** Configura los manejadores para el modo interactivo usando sigaction.
-** - SIGINT (Ctrl+C): Llama a signal_reset_prompt. La bandera SA_RESTART
-** ayuda a evitar que algunas llamadas al sistema sean interrumpidas.
-** - SIGQUIT (Ctrl+\): Se ignora.
-*/
+ * signals_interactive
+ * Configura los manejadores de señal para el modo interactivo principal.
+ * SIGINT (Ctrl+C) se maneja para mostrar un nuevo prompt.
+ * SIGQUIT (Ctrl+\) se ignora.
+ */
 void	signals_interactive(void)
 {
 	struct sigaction	sa_int;
@@ -49,45 +42,37 @@ void	signals_interactive(void)
 
 	ft_memset(&sa_int, 0, sizeof(sa_int));
 	ft_memset(&sa_quit, 0, sizeof(sa_quit));
-	sa_int.sa_handler = signal_reset_prompt;
-	sa_int.sa_flags = SA_RESTART;
-	sa_quit.sa_handler = SIG_IGN;
+	sa_int.sa_handler = signal_handler_interactive;
 	sigaction(SIGINT, &sa_int, NULL);
+	sa_quit.sa_handler = SIG_IGN;
 	sigaction(SIGQUIT, &sa_quit, NULL);
 }
 
 /*
-** signals_during_execution
-** --------------------------
-** Descripción:
-** Configura al padre para que ignore las señales mientras un hijo se ejecuta.
-** De esta forma, la señal solo afectará al proceso hijo.
-** Se debe llamar en el proceso padre antes de la llamada a waitpid.
-*/
-void	signals_during_execution(void)
+ * signal_handler_heredoc
+ * Manejador de señal para SIGINT (Ctrl+C) durante la lectura de un heredoc.
+ * Cierra la entrada estándar para interrumpir el bloqueo de readline.
+ *
+ * sig: El número de la señal recibida (no se usa directamente).
+ */
+static void	signal_handler_heredoc(int sig)
 {
-	struct sigaction	sa;
-
-	ft_memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = SIG_IGN;
-	sigaction(SIGINT, &sa, NULL);
-	sigaction(SIGQUIT, &sa, NULL);
+	(void)sig;
+	g_get_signal = 130;
+	close(STDIN_FILENO);
 }
 
 /*
-** signals_default_for_child
-** ---------------------------
-** Descripción:
-** Restaura el comportamiento por defecto de las señales en el proceso hijo
-** justo antes de llamar a execve. Esto asegura que el comando que se ejecuta
-** (como 'sleep') termine al recibir Ctrl+C, como lo haría en un shell normal.
-*/
-void	signals_default_for_child(void)
+ * signals_heredoc
+ * Configura los manejadores de señal para el modo de lectura de heredoc.
+ * SIGINT (Ctrl+C) se maneja para interrumpir la lectura.
+ * SIGQUIT (Ctrl+\) se sigue ignorando para que no cierre la shell.
+ */
+void	signals_heredoc(void)
 {
 	struct sigaction	sa;
 
 	ft_memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = SIG_DFL;
+	sa.sa_handler = signal_handler_heredoc;
 	sigaction(SIGINT, &sa, NULL);
-	sigaction(SIGQUIT, &sa, NULL);
 }

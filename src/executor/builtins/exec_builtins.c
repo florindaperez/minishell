@@ -12,13 +12,17 @@
 
 #include "minishell.h"
 #include "minishell_executor.h"
-/*
-* Prototipo estático para la función de configuración del entorno
-* para builtins del proceso padre.
-*/
-static bool	setup_parent_builtin_env(t_cmd_exe *cmd, char ***argv_ptr,
-				bool *io_redirected_flag);
 
+/*
+ * is_parent_builtin
+ * Comprueba si un comando dado es un built-in que debe ejecutarse en el
+ * proceso padre para afectar al entorno de la shell principal.
+ *
+ * cmd: La estructura del comando del ejecutor que se va a comprobar.
+ *
+ * Retorna: 'true' si el comando es 'cd', 'exit', 'unset', o 'export' con
+ * argumentos. 'false' en caso contrario.
+ */
 bool	is_parent_builtin(t_cmd_exe *cmd)
 {
 	char	*cmd_name;
@@ -39,6 +43,20 @@ bool	is_parent_builtin(t_cmd_exe *cmd)
 	return (false);
 }
 
+/*
+ * setup_parent_builtin_env
+ * Prepara el entorno para la ejecución de un built-in del proceso padre.
+ * Gestiona las redirecciones de E/S y construye el array de argumentos (argv).
+ *
+ * cmd:                 El comando a ejecutar.
+ * argv_ptr:            Puntero a un (char **) donde se almacenará el array
+ * de argumentos construido.
+ * io_redirected_flag:  Puntero a un booleano que se establecerá a 'true' si se
+ * realizó alguna redirección de E/S.
+ *
+ * Retorna: 'true' si la preparación fue exitosa, 'false' si ocurrió un error
+ * durante la redirección o la construcción de los argumentos.
+ */
 static bool	setup_parent_builtin_env(t_cmd_exe *cmd, char ***argv_ptr,
 									bool *io_redirected_flag)
 {
@@ -64,6 +82,17 @@ static bool	setup_parent_builtin_env(t_cmd_exe *cmd, char ***argv_ptr,
 	return (true);
 }
 
+/*
+ * execute_parent_builtin
+ * Orquesta la ejecución de un built-in que se ejecuta en el proceso padre.
+ * Maneja la configuración, la ejecución y la restauración del entorno.
+ *
+ * cmd:   El nodo del comando que contiene el built-in a ejecutar.
+ * data:  Puntero a la estructura de datos principal del ejecutor, que
+ * contiene el estado del entorno de la shell.
+ *
+ * Retorna: El código de salida (exit status) del built-in ejecutado.
+ */
 int	execute_parent_builtin(t_cmd_exe *cmd, t_data_env_exe *data)
 {
 	int		result;
@@ -93,6 +122,19 @@ int	execute_parent_builtin(t_cmd_exe *cmd, t_data_env_exe *data)
 	return (result);
 }
 
+/*
+ * execute_builtin
+ * Actúa como un despachador (dispatcher) para todos los built-ins. Basado en
+ * el nombre del comando, llama a la función de implementación específica.
+ *
+ * cmd_node: El nodo completo del comando (usado para contexto si es necesario).
+ * data:     La estructura de datos del ejecutor, pasada a los built-ins que
+ * modifican o leen el entorno.
+ * args:     El array de argumentos (argv) para el built-in.
+ *
+ * Retorna: El código de salida devuelto por la función del built-in que fue
+ * ejecutada, o 127 si el comando no es un built-in reconocido.
+ */
 int	execute_builtin(t_cmd_exe *cmd_node, t_data_env_exe *data, char **args)
 {
 	if (!args || !args[0])

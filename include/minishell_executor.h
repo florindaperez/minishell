@@ -127,8 +127,7 @@ int				fill_exec_io_from_redirections(t_cmd_io_exe *exec_io,
 ** >> PROTOTIPOS DE FUNCIONES PÚBLICAS DEL EJECUTOR <<
 ** ========================================================================== **
 */
-void			execute_pipeline_logic(t_cmd *cmd_list,
-					t_env **envlist_ptr, t_data_env_exe *data);
+void			execute_pipeline_logic(t_cmd *cmd_list, t_data_env_exe *data);
 
 /* --- Procesos y Ejecución --- */
 void			execute_pipeline(t_cmd_exe *cmds, t_data_env_exe *data);

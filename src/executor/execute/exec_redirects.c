@@ -9,15 +9,18 @@
 /*   Updated: 2025/05/10 16:14:45 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "minishell.h" // Incluir lo necesario
+
+#include "minishell.h"
 #include "minishell_executor.h"
 
 /*
-* redirect_fd
-*
-* Wrapper para dup2 que incluye manejo de errores.
-* Duplica old_fd en new_fd.
-*/
+ * redirect_fd
+ * Envuelve la llamada al sistema 'dup2' para incluir un manejo de errores
+ * robusto. Si 'dup2' falla, termina el programa con un mensaje de error.
+ *
+ * old_fd: El descriptor de fichero que se va a duplicar.
+ * new_fd: El descriptor de fichero de destino (ej: STDIN_FILENO).
+ */
 static void	redirect_fd(int old_fd, int new_fd)
 {
 	if (dup2(old_fd, new_fd) == -1)
@@ -25,13 +28,17 @@ static void	redirect_fd(int old_fd, int new_fd)
 }
 
 /*
-* setup_child_redirections
-*
-* Configura las redirecciones de E/S para un proceso hijo.
-* Prioriza las redirecciones de fichero (ej: < file) sobre los pipes.
-* Cierra los descriptores de fichero originales de los pipes después
-* de la redirección para prevenir cuelgues y fugas de descriptores.
-*/
+ * setup_child_redirections
+ * Configura las redirecciones de entrada y salida para un proceso hijo dentro
+ * de un pipeline. Da prioridad a las redirecciones de ficheros sobre las
+ * tuberías. Cierra los descriptores de fichero originales después de usarlos
+ * para evitar fugas y asegurar el correcto funcionamiento de las tuberías.
+ *
+ * cmd:         El comando cuyas redirecciones se están configurando.
+ * pipe_in_fd:  El descriptor de lectura de la tubería de entrada (-1 si no hay).
+ * pipe_out_fd: El descriptor de escritura de la tubería de salida (-1 si no
+ * hay).
+ */
 void	setup_child_redirections(t_cmd_exe *cmd, int pipe_in_fd,
 									int pipe_out_fd)
 {
