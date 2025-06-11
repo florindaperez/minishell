@@ -6,7 +6,7 @@
 /*   By: jocuni-p <jocuni-p@student.42barcelona.com +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/29 12:09:43 by jocuni-p          #+#    #+#             */
-/*   Updated: 2024/06/07 17:22:51 by jocuni-p         ###   ########.fr       */
+/*   Updated: 2025/06/10 14:36:59 by jocuni-p         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 /*Tokenizes the content of 'line' using delimiters (' ', \t, <, >, >>, <<, |) \
 and put them on a 'tok' list. Each node contains tok->type and tok->str if it\
  is not an operator. The function does not check for syntax errors.
-If unclosed quotes are found they are closed at the end of the line.*/
+If UNCLOSED QUOTES are found they are closed at the end of the line.*/
 
 void	tokenizer(t_tok **tok, char *line)
 {
