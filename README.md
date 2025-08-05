@@ -25,7 +25,7 @@ Este proyecto comenzó con un enfoque clásico: un **parser** y un **ejecutor** 
 
 El reto fue adaptar dos partes de dos proyectos a una arquitectura de tres fases:
 
-1.  **Parseo**: El módulo original de mi gran compañero.
+1.  **Parseo**: El módulo original de mi compañero.
 2.  **Traducción**: Una capa intermedia que preparaba los datos para la ejecución.
 3.  **Ejecución**: El motor final que corría los comandos.
 
