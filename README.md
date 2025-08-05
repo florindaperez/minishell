@@ -126,7 +126,7 @@ Para compilar y ejecutar nuestro Minishell, solo necesitas `make` y un compilado
 2.  **Navega al directorio del proyecto:**
 
     ```sh
-    cd minishell_bonus
+    cd minishell
     ```
 
 3.  **Compila el proyecto:**
