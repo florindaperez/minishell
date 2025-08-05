@@ -114,7 +114,6 @@ typedef enum e_restore_mode_exe
 */
 t_arg_info_exe	**transl_args_p_to_args_e(char **parser_commands);
 t_cmd_exe		*convert_cmd_list_to_cms_list_exec(struct s_cmd *cmd_list_head);
-char			*assemble_env_string(t_env *env_node);
 char			**convert_env_list_to_exec_envp(struct s_env *env_list);
 void			free_arg_info_array(t_arg_info_exe **flp_args);
 void			free_cmd_list(t_cmd_exe *flp_cmd_list_head);
@@ -141,7 +140,6 @@ int				get_path_execution_errors(const char *exec_path,
 void			parent_pipeline_handle_fds(int *pipe_fds,
 					int *prev_pipe_fd_ptr, pid_t current_pid,
 					pid_t *last_spawned_pid_ptr);
-int				get_specific_child_exit_status(pid_t child_pid);
 bool			handle_pipeline_preliminaries(t_cmd_exe *cmds,
 					t_data_env_exe *data);
 int				wait_for_all_children(pid_t last_pid);
@@ -152,7 +150,6 @@ void			handle_path_search_error(t_path_status status,
 					const char *cmd_name, t_data_env_exe *data);
 
 /* --- Redirecciones --- */
-void			init_io_fds(t_cmd_io_exe *io);
 bool			redirect_io(t_cmd_exe *cmd);
 bool			restore_io(t_cmd_io_exe *io);
 void			setup_child_redirections(t_cmd_exe *cmd,
@@ -204,11 +201,6 @@ bool			add_or_update_env_list_var(t_env **list_head_ptr,
 
 /* --- Utilidades Generales de Entorno --- */
 bool			is_valid_env_var_key(const char *key);
-char			*build_env_entry(char *key, char *value);
-bool			add_env_var(t_data_env_exe *data, char *key, char *value);
-
-int				num_var_env(char **env);
-int				get_env_var_id(char **env, char *key);
 
 /* --- Otras Utilidades --- */
 long long		ft_atoll_with_error_check(const char *str, bool *error);

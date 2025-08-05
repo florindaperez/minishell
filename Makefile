@@ -59,28 +59,22 @@ FILES = \
 	minishell_parser.c \
 	minishell_exec.c \
     signals.c \
+	signals_exec.c \
     \
-    arr2d/add_one_arr2d.c \
-    arr2d/dup_arr2d.c \
     arr2d/free_arr2d.c \
-    arr2d/rm_one_arr2d.c \
     arr2d/size_arr2d.c \
     \
     cmd/cmd_add_back.c \
     cmd/cmd_free.c \
     cmd/cmd_last.c \
     cmd/cmd_new_node.c \
-    cmd/cmd_size.c \
     \
     env_list/env_cleaner_list.c \
-    env_list/env_delone_lst.c \
     env_list/env_init_list.c \
     env_list/env_lstadd_back.c \
     env_list/env_lstlast.c \
     env_list/env_lstnew.c \
     \
-    exit_status/error_msgs.c \
-    exit_status/error_msgs2.c \
     exit_status/get_exit_status_len.c \
     exit_status/get_exit_status_val.c \
     exit_status/set_exit_status.c \
@@ -112,18 +106,10 @@ FILES = \
     parser/syntax_check_1.c \
     parser/syntax_check_2.c \
     \
-    prints/print_arr2d.c \
-    prints/print_cmd_para_executor.c \
-    prints/print_cmd.c \
-    prints/print_envlist.c \
-    prints/print_redir.c \
-    prints/print_tok.c \
-    \
     redirs/redir_add_back.c \
     redirs/redir_free.c \
     redirs/redir_last.c \
     redirs/redir_new_node.c \
-    redirs/redir_size.c \
     \
     tokenizer/tokenizer.c \
     tokenizer/init_operator_type.c \
@@ -134,14 +120,12 @@ FILES = \
     tokens/tok_free.c \
     tokens/tok_last.c \
     tokens/tok_new_node.c \
-    tokens/tok_size.c \
     \
     utils/p_malloc.c \
     utils/utils1.c \
     utils/message_error.c \
 	utils/utils.c \
-	utils/array_utils.c \
-    \
+	\
     translate/parser_to_exec_args.c \
     translate/parser_to_exec_convert.c \
     translate/parser_to_exec_free.c \
@@ -158,6 +142,7 @@ FILES = \
     executor/execute/find_path.c \
 	executor/execute/find_path_utils.c \
     executor/execute/heredoc.c \
+	executor/execute/heredoc_utils.c \
     \
     executor/redirections/ft_io.c \
     executor/redirections/redir_process.c \

@@ -14,34 +14,6 @@
 #include "minishell_executor.h"
 
 /*
- * ft_io.c:
- * Este archivo contiene las funciones principales para la gestión de
- * entrada/salida (E/S) en minishell. Orquesta el proceso de redirección
- * y restauración de los descriptores de fichero estándar.
- */
-
-/*
- * Inicializa los campos de la estructura t_cmd_io_exe a sus valores por defecto
- * (NULL o -1 para punteros y descriptores de fichero, false para booleanos).
- *
- * io: Puntero a la estructura t_cmd_io_exe que se va a inicializar.
- */
-void	init_io_fds(t_cmd_io_exe *io)
-{
-	if (!io)
-		return ;
-	io->infile = NULL;
-	io->outfile = NULL;
-	io->heredoc_delimiter = NULL;
-	io->heredoc_quotes = false;
-	io->append_mode = false;
-	io->fd_in = -1;
-	io->fd_out = -1;
-	io->stdin_backup = -1;
-	io->stdout_backup = -1;
-}
-
-/*
  * Orquesta el proceso de redirección de E/S para un comando dado.
  * Realiza copias de seguridad de los descriptores estándar, luego aplica
  * las redirecciones de entrada y salida según se especifique en cmd->io.

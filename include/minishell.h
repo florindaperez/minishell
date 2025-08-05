@@ -44,7 +44,7 @@
 /*-------- Defines para Rutas --------*/
 // Fallback para PATH_MAX si no está definido por <limits.h>
 # ifndef PATH_MAX
-#  define PATH_SIZE 4096 // Un tamaño común y generoso para rutas
+#  define PATH_SIZE 4096 // Un tamaño generoso para rutas
 # else
 #  define PATH_SIZE PATH_MAX
 # endif
@@ -94,7 +94,6 @@ typedef struct s_env
 	char			*key;
 	char			*val;
 	char			**tokens;
-	char			**tokens2;
 	struct s_env	*next;
 }					t_env;
 
@@ -178,39 +177,31 @@ t_cmd	*tokenize_parse_expand(char *line, t_env *env, t_list **heredoc_tmp_f);
 
 /*---------------------------array 2d ------------------------*/
 size_t	size_arr2d(char **arr2d);
-char	**dup_arr2d(char **arr2d);
-char	**add_one_arr2d(char **arr2d, char *new);
-char	**rm_one_arr2d(char **arr2d, int index);
 void	free_arr2d(char **arr2d);
-void	print_arr2d(char **arr2d);//ELIMINAR ANTES DE ENTREGA
 
 /*-------------------t_env------------------*/
 t_env	*lstlast(t_env *lst);
 void	lstadd_back(t_env **lst, t_env *new);
 t_env	*lstnew(char *key, char *value);
 void	env_init_list(char **envp, t_env **env);
-void	env_delone(t_env **env, char **node_to_del, void (*del)(void*));
 
 /*--------------------t_tok -----------------*/
 t_tok	*tok_new_node(char *str, int type);
 t_tok	*tok_last(t_tok *lst);
 void	tok_add_back(t_tok **lst, t_tok *new);
 void	tok_free(t_tok **lst);
-int		tok_size(t_tok *lst);//ELIMINAR ANTES DE ENTREGA
 
 /*---------t_cmd--------TODAS-> s_cmd generada del parser--------*/
 t_cmd	*cmd_new_node(void);
 t_cmd	*cmd_last(t_cmd *lst);
 void	cmd_add_back(t_cmd **lst, t_cmd *new);
 void	cmd_free(t_cmd **lst);
-int		cmd_size(t_cmd *lst);//ELIMINAR ANTES DE ENTREGA
 
 /*--------------------t_redir-------TODAS-> s_redir -----------*/
 t_redir	*redir_new_node(char *str, int redir_type, bool had_quotes);
 t_redir	*redir_last(t_redir *lst);
 void	redir_add_back(t_redir **lst, t_redir *new);
 void	redir_free(t_redir **lst);
-int		redir_size(t_redir *lst);//ELIMINAR ANTES DE ENTREGA
 
 /*-------------------tokenizer-------------*/
 int		init_operator_type(char *line, t_tok **new_tok);
@@ -246,7 +237,6 @@ void	handle_dollar_question(t_xpdr *xpdr);
 void	handle_dollar_invalid_syntax(char *str, t_xpdr *xpdr);
 
 /*---------------------------utils0.c -------------------------*/
-int		ft_msgs(int n, t_cmd *cmd);
 void	set_exit_status(int n);
 
 /*---------------------utils1.c-------------------*/
@@ -257,13 +247,11 @@ int		ft_is_all_space(char *str);
 void	del_heredoc_tmp_f(void *content);
 
 /*---------------------utils.c-------------------*/
-char	*ft_strjoin_free(char *s1, char const *s2);
 void	safe_close(int *fd);
 void	perror_exit(const char *context, int g_get_signal);
 int		ft_isspace(int c);
 int		is_builtins(t_cmd *cmd);
 
-bool	realloc_env_array(char ***old_array_ptr, int new_element_capacity);
 void	*p_malloc(size_t size);
 
 /* --- SEÑALES --- */
@@ -275,21 +263,6 @@ void	signals_child_default(void);
 /*-------------------exit_status------Manejamos msg_error y $?------------*/
 int		get_exit_status_len(void);
 char	*get_exit_status_val(void);
-void	command_not_found(t_cmd *cmd, const char *prefix, size_t prefix_len);
-void	no_file_or_dir(t_cmd *cmd, const char *prefix, size_t prefix_len);
-
-/*----------------------prints--------------------*/
-void	print_arr2d(char **arr2d);//ELIMINAR ANTES DE ENTREGA
-void	print_tok(t_tok *lst);//ELIMINAR ANTES DE ENTREGA
-void	print_cmd(t_cmd *list);//ELIMINAR ANTES DE ENTREGA
-void	print_redir(t_redir *lst);//ELIMINAR ANTES DE ENTREGA
-void	ft_print_keys(t_env *env_struct);//ELIMINAR ANTES DE ENTREGA
-void	ft_print_values(t_env *env_struct);//ELIMINAR ANTES DE ENTREGA
-void	ft_printstack(t_env *env_struct);//ELIMINAR ANTES DE ENTREGA
-void	print_cmd_para_executor(t_cmd *lst);//ELIMINAR ANTES DE ENTREG
-
-/*------------------redirections---------------*/
-int		exist_redirections(t_cmd *cmd);
 
 /*--- Manejo de Errores (Se mantiene, unificar con executor si es posible) ---*/
 int		msg_error_cmd(char *arg_cmd, char *descrip, char *err_msg, int nb_err);

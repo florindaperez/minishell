@@ -29,33 +29,6 @@ void	parent_pipeline_handle_fds(int *pipe_fds, int *prev_pipe_fd_ptr,
 }
 
 /*
- * Obtiene el estado de salida del proceso hijo especificado.
- * Retorna el código de salida procesado.
- */
-int	get_specific_child_exit_status(pid_t child_pid)
-{
-	int	status;
-	int	exit_val;
-
-	exit_val = EXIT_SUCCESS;
-	if (child_pid <= 0)
-		return (exit_val);
-	if (waitpid(child_pid, &status, 0) == child_pid)
-	{
-		if (WIFEXITED(status))
-			exit_val = WEXITSTATUS(status);
-		else if (WIFSIGNALED(status))
-			exit_val = 128 + WTERMSIG(status);
-	}
-	else if (errno != ECHILD)
-	{
-		perror("minishell: waitpid failed for specific child");
-		exit_val = EXIT_FAILURE;
-	}
-	return (exit_val);
-}
-
-/*
  * Maneja casos especiales: sin comandos o si es un builtin del padre.
  * Retorna true si la ejecución de la pipeline debe continuar, false si no.
  */

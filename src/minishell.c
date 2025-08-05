@@ -6,7 +6,7 @@
 /*   By: jocuni-p <jocuni-p@student.42barcelona.com +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/07 17:00:08 by jocuni-p          #+#    #+#             */
-/*   Updated: 2025/06/10 18:02:39 by jocuni-p         ###   ########.fr       */
+/*   Updated: 2025/06/04 17:54:48 by flperez-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "minishell.h"
@@ -90,19 +90,12 @@ static char	*generate_line(void)
 * minishell
 * Declara 'data' aquí para que sea persistente.
 * El bucle ahora puede terminar para permitir la limpieza final.
-* isatty(STDIN_FILENO), es if es para impedir la entrada:
-* ./minishell < /dev/ramdon
 */
 void	minishell(t_env *envlist_main)
 {
 	t_data_env_exe	data;
 	char			*line_input;
 
-	if (!isatty(STDIN_FILENO))
-	{
-		write(2, "Error: El modo no interactivo no está permitido.\n", 49);
-		exit(EXIT_FAILURE);
-	}
 	ft_memset(&data, 0, sizeof(t_data_env_exe));
 	data.shell_env_list_ptr = &envlist_main;
 	while (1)

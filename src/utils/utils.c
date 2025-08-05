@@ -14,20 +14,6 @@
 #include "minishell_executor.h"
 
 /*
- * ft_strjoin_free: Une dos strings (s1 y s2) y libera s1 después.
-*/
-char	*ft_strjoin_free(char *s1, char const *s2)
-{
-	char	*result;
-
-	if (!s1)
-		return (ft_strdup(s2));
-	result = ft_strjoin(s1, s2);
-	free_ptr(s1);
-	return (result);
-}
-
-/*
  * Cierra de forma segura un descriptor de archivo y lo marca como -1.
  * Solo intenta cerrar si el puntero es válido y el fd no es -1.
  * fd => Puntero al descriptor de archivo a cerrar.

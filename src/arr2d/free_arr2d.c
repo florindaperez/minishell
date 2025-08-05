@@ -32,17 +32,3 @@ void	free_arr2d(char **array_strings)
 		array_strings = NULL;
 	}
 }
-/*//-------ALTERNATIVA DE HNOS LAJARA----------
-// Frees the NULL-terminated array of strings 'arr'.
-void	arrstr_free(char **arr)
-{
-	char	**tmp;
-
-	tmp = arr;
-	while (*tmp)
-	{
-		free(*tmp);
-		++tmp;
-	}
-	free(arr);
-}*/

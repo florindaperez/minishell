@@ -21,7 +21,7 @@
  * @return Una nueva cadena (char *) alocada con el formato "KEY=VALUE",
  * o NULL si falla la asignación o la entrada es inválida.
  */
-char	*assemble_env_string(t_env *env_node)
+static	char	*assemble_env_string(t_env *env_node)
 {
 	char	*key_equals_sign;
 	char	*env_str;

@@ -36,33 +36,3 @@ void	*new_tok_builder(char *str, t_xpdr *xpdr, t_env *envlist)
 	xpdr->result[xpdr->j] = '\0';
 	return (xpdr->result);
 }
-
-/*---Returns the new token already expanded and quote removed---
-* SE ha eliminado la linea 	str_free_and_null(&str);, porque daba un error 
-* se liberaba dos veces .
-
-void	*new_tok_builder(char *str, t_xpdr *xpdr, t_env *envlist)
-{
-	while (str && str[xpdr->i])
-	{
-		if (str[xpdr->i] == '"' || str[xpdr->i] == '\'')
-			handle_quote_builder(str[xpdr->i], xpdr);
-		else if (str[xpdr->i] == '$' && xpdr->s_quote == CLOSED \
-			&& str[xpdr->i + 1])
-		{
-			xpdr->i++;
-			get_dollar_builder(str, xpdr, envlist);
-			xpdr->i++;
-		}
-		else
-		{
-			xpdr->result[xpdr->j] = str[xpdr->i];
-			xpdr->j++;
-			xpdr->i++;
-		}
-	}
-	xpdr->result[xpdr->j] = '\0';
-	str_free_and_null(&str);
-	return (xpdr->result);
-}
-*/
